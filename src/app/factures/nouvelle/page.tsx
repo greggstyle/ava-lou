@@ -100,9 +100,9 @@ function NouvelleFactureForm() {
         if (firstVat && typeof firstVat.vat_rate === 'number') setVatRate(firstVat.vat_rate);
       }
 
-      // Notes — keep the raw input for context
-      if (action.input_raw && !entities.notes) setNotes(`Dictée vocale : « ${action.input_raw} »`);
-      else if (entities.notes) setNotes(entities.notes);
+      // Notes are client-facing. Keep them clean. Raw transcript stays in
+      // ava_actions.input_raw and is shown via the prefilledFrom banner below.
+      if (entities.notes) setNotes(entities.notes);
 
       if (entities.due_date) setDueDate(entities.due_date);
       setPrefilledFrom(action.input_raw ?? 'votre dictée');
@@ -179,16 +179,18 @@ function NouvelleFactureForm() {
               background: C.greenSoft,
               border: `1px solid ${C.green}33`,
               borderRadius: 12,
-              display: 'flex',
-              gap: 10,
-              alignItems: 'flex-start',
               font: `400 13px/1.45 ${SANS}`,
               color: C.ink,
             }}
           >
-            <div style={{ width: 6, height: 6, borderRadius: 3, background: C.green, marginTop: 7, flex: 'none' }} />
-            <div>
-              <em style={{ fontFamily: SERIF, fontStyle: 'italic' }}>Pré-rempli</em> depuis votre dictée. Vérifiez et complétez ce qui manque.
+            <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <div style={{ width: 6, height: 6, borderRadius: 3, background: C.green, marginTop: 7, flex: 'none' }} />
+              <div>
+                <em style={{ fontFamily: SERIF, fontStyle: 'italic' }}>Pré-rempli</em> depuis votre dictée. Vérifiez et complétez ce qui manque.
+              </div>
+            </div>
+            <div style={{ marginTop: 8, paddingLeft: 16, font: `400 12px/1.5 ${SANS}`, color: C.muted, fontStyle: 'italic' }}>
+              « {prefilledFrom} »
             </div>
           </div>
         )}
@@ -279,12 +281,10 @@ function NouvelleFactureForm() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8, alignItems: 'center' }}>
                     <input
                       style={inputStyle}
-                      type="number"
-                      min="0"
-                      step="0.01"
+                      inputMode="decimal"
                       placeholder="Qté"
                       value={l.qty}
-                      onChange={(e) => updateLine(idx, { qty: e.target.value })}
+                      onChange={(e) => updateLine(idx, { qty: e.target.value.replace(',', '.') })}
                     />
                     <input
                       style={inputStyle}

@@ -18,8 +18,18 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
   if (qErr) return NextResponse.json({ error: qErr.message }, { status: 400 });
   if (!quote) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
+  // Read profile for default payment terms
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('payment_terms_days')
+    .eq('id', user.id)
+    .maybeSingle();
+  const termsDays = profile?.payment_terms_days ?? 30;
+
   const today = new Date();
   const issueDate = today.toISOString().slice(0, 10);
+  const dueDate = new Date(today.getTime() + termsDays * 24 * 60 * 60 * 1000)
+    .toISOString().slice(0, 10);
   const year = today.getFullYear();
 
   const { count } = await supabase
@@ -38,7 +48,7 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
       number,
       status: 'brouillon',
       issue_date: issueDate,
-      due_date: null,
+      due_date: dueDate,
       vat_rate: quote.vat_rate,
       amount_ht: quote.amount_ht,
       amount_vat: quote.amount_vat,

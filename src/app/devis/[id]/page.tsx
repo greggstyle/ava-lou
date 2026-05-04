@@ -179,6 +179,8 @@ export default function DevisDetailPage() {
   function buildMailto(q: QuoteWithClient): string | null {
     const client = q.clients;
     if (!client?.email) return null;
+    const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://ava-lou.vercel.app';
+    const viewUrl = `${siteUrl}/voir/devis/${q.id}`;
     const subject = `Devis ${q.number ?? ''} — ${formatDateFR(q.issue_date)}`;
     const lines = (q.line_items ?? []) as LineItem[];
     const detail = lines
@@ -188,6 +190,8 @@ export default function DevisDetailPage() {
       `Bonjour ${client.name},`,
       '',
       `Vous trouverez ci-dessous le détail de votre devis ${q.number ?? ''} émis le ${formatDateFR(q.issue_date)}.`,
+      '',
+      `Version imprimable + Bon pour accord : ${viewUrl}`,
       '',
       'DÉTAIL',
       detail || '- (à préciser)',
@@ -409,6 +413,19 @@ export default function DevisDetailPage() {
               })()}
             </div>
 
+            <div style={{ marginTop: 14 }}>
+              <AvaLabel style={{ marginBottom: 8 }}>Version partageable</AvaLabel>
+              <AvaButton
+                kind="light"
+                onClick={() => window.open(`/voir/devis/${quote.id}`, '_blank')}
+              >
+                Voir / Imprimer (Bon pour accord)
+              </AvaButton>
+              <div style={{ marginTop: 6, font: `400 12px/1.4 ${SANS}`, color: C.muted }}>
+                Page publique avec espace signature. Lien partageable inclus dans l&apos;email.
+              </div>
+            </div>
+
             <div style={{ marginTop: 18 }}>
               <AvaButton kind="validate" full onClick={onConvert} disabled={converting}>
                 {converting ? 'Conversion…' : 'Convertir en facture'}
@@ -451,7 +468,7 @@ export default function DevisDetailPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <input style={inputStyle} placeholder="Libellé" value={l.label} onChange={(e) => updateLine(idx, { label: e.target.value })} />
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8, alignItems: 'center' }}>
-                        <input style={inputStyle} type="number" min="0" step="0.01" placeholder="Qté" value={l.qty} onChange={(e) => updateLine(idx, { qty: e.target.value })} />
+                        <input style={inputStyle} inputMode="decimal" placeholder="Qté" value={l.qty} onChange={(e) => updateLine(idx, { qty: e.target.value.replace(',', '.') })} />
                         <input style={inputStyle} inputMode="decimal" placeholder="Prix unitaire" value={l.unit_price} onChange={(e) => updateLine(idx, { unit_price: e.target.value })} />
                         <button
                           type="button"

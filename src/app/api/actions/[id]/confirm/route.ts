@@ -35,17 +35,49 @@ async function findOrCreateClient(
   email: string | null,
 ): Promise<string | null> {
   if (!name) return null;
-  const { data: existing } = await supabase
+  const trimmed = name.trim();
+
+  // 1. Exact (case-insensitive) match — most common for repeat clients
+  const { data: exact } = await supabase
     .from('clients')
     .select('id')
     .eq('user_id', userId)
-    .ilike('name', name)
+    .ilike('name', trimmed)
     .limit(1)
     .maybeSingle();
-  if (existing?.id) return existing.id;
+  if (exact?.id) return exact.id;
+
+  // 2. Fuzzy match — handles "Payet" vs "M. Payet" (whisper transcript may
+  // omit civility). Use the raw name as a substring to catch both directions.
+  const { data: fuzzy } = await supabase
+    .from('clients')
+    .select('id, name')
+    .eq('user_id', userId)
+    .ilike('name', `%${trimmed}%`)
+    .limit(5);
+  if (fuzzy && fuzzy.length > 0) {
+    // Prefer shortest name (closest to original) when multiple match
+    const best = fuzzy.sort((a, b) => a.name.length - b.name.length)[0];
+    return best.id;
+  }
+
+  // 3. Reverse fuzzy — client name in DB might be a substring of dictation
+  // ("Mme Hoarau Marie-José" dictated, DB has "Mme Hoarau")
+  const { data: rev } = await supabase
+    .from('clients')
+    .select('id, name')
+    .eq('user_id', userId);
+  if (rev) {
+    const matched = rev.find((c) =>
+      c.name && trimmed.toLowerCase().includes(c.name.toLowerCase()),
+    );
+    if (matched) return matched.id;
+  }
+
+  // 4. No match — create new client
   const { data: created, error } = await supabase
     .from('clients')
-    .insert({ user_id: userId, name, email })
+    .insert({ user_id: userId, name: trimmed, email })
     .select('id')
     .single();
   if (error || !created) return null;

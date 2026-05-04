@@ -178,6 +178,8 @@ export default function FactureDetailPage() {
   function buildMailto(inv: InvoiceWithClient): string | null {
     const client = inv.clients;
     if (!client?.email) return null;
+    const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://ava-lou.vercel.app';
+    const viewUrl = `${siteUrl}/voir/facture/${inv.id}`;
     const subject = `Facture ${inv.number ?? ''} — ${formatDateFR(inv.issue_date)}`;
     const lines = (inv.line_items ?? []) as LineItem[];
     const detail = lines
@@ -187,6 +189,8 @@ export default function FactureDetailPage() {
       `Bonjour ${client.name},`,
       '',
       `Vous trouverez ci-dessous le détail de votre facture ${inv.number ?? ''} émise le ${formatDateFR(inv.issue_date)}.`,
+      '',
+      `Version imprimable : ${viewUrl}`,
       '',
       'DÉTAIL',
       detail || '- (à préciser)',
@@ -345,7 +349,7 @@ export default function FactureDetailPage() {
                     kind={invoice.status === s ? 'primary' : 'light'}
                     onClick={() => setStatus(s)}
                   >
-                    {s.replace('_', ' ')}
+                    {s === 'en_retard' ? 'En retard' : s.charAt(0).toUpperCase() + s.slice(1)}
                   </AvaButton>
                 ))}
               </div>
@@ -389,6 +393,19 @@ export default function FactureDetailPage() {
               })()}
             </div>
 
+            <div style={{ marginTop: 14 }}>
+              <AvaLabel style={{ marginBottom: 8 }}>Version partageable</AvaLabel>
+              <AvaButton
+                kind="light"
+                onClick={() => window.open(`/voir/facture/${invoice.id}`, '_blank')}
+              >
+                Voir / Imprimer (PDF)
+              </AvaButton>
+              <div style={{ marginTop: 6, font: `400 12px/1.4 ${SANS}`, color: C.muted }}>
+                Page publique imprimable. Lien partageable inclus dans l&apos;email.
+              </div>
+            </div>
+
             <div style={{ marginTop: 28, display: 'flex', justifyContent: 'center' }}>
               <AvaButton kind="danger" onClick={onDelete}>Supprimer cette facture</AvaButton>
             </div>
@@ -425,7 +442,7 @@ export default function FactureDetailPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                       <input style={inputStyle} placeholder="Libellé" value={l.label} onChange={(e) => updateLine(idx, { label: e.target.value })} />
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr auto', gap: 8, alignItems: 'center' }}>
-                        <input style={inputStyle} type="number" min="0" step="0.01" placeholder="Qté" value={l.qty} onChange={(e) => updateLine(idx, { qty: e.target.value })} />
+                        <input style={inputStyle} inputMode="decimal" placeholder="Qté" value={l.qty} onChange={(e) => updateLine(idx, { qty: e.target.value.replace(',', '.') })} />
                         <input style={inputStyle} inputMode="decimal" placeholder="Prix unitaire" value={l.unit_price} onChange={(e) => updateLine(idx, { unit_price: e.target.value })} />
                         <button
                           type="button"

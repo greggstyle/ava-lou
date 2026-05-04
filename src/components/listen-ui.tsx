@@ -20,6 +20,7 @@ export function ListenUi() {
   const mediaStreamRef = React.useRef<MediaStream | null>(null);
   const recorderRef = React.useRef<MediaRecorder | null>(null);
   const chunksRef = React.useRef<Blob[]>([]);
+  const lastBlobRef = React.useRef<Blob | null>(null); // preserved across error retries
   const audioCtxRef = React.useRef<AudioContext | null>(null);
   const analyserRef = React.useRef<AnalyserNode | null>(null);
   const rafRef = React.useRef<number | null>(null);
@@ -50,6 +51,7 @@ export function ListenUi() {
 
   const handleProcess = React.useCallback(
     async (blob: Blob) => {
+      lastBlobRef.current = blob;
       setPhase('processing');
       try {
         const fd = new FormData();
@@ -293,11 +295,22 @@ export function ListenUi() {
             >
               {errorMsg ?? "Je n'ai pas saisi — réessayez ?"}
             </div>
-            <div style={{ display: 'flex', gap: 10 }}>
-              <AvaButton kind="validate" onClick={() => void startRecording()}>
-                Réessayer
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%', maxWidth: 320 }}>
+              {lastBlobRef.current && (
+                <AvaButton
+                  kind="validate"
+                  full
+                  onClick={() => {
+                    if (lastBlobRef.current) void handleProcess(lastBlobRef.current);
+                  }}
+                >
+                  Renvoyer le même enregistrement
+                </AvaButton>
+              )}
+              <AvaButton kind="light" full onClick={() => void startRecording()}>
+                Réenregistrer
               </AvaButton>
-              <AvaButton kind="ghost" onClick={() => router.push('/')} style={{ color: C.paper }}>
+              <AvaButton kind="ghost" full onClick={() => router.push('/')} style={{ color: C.paper }}>
                 Annuler
               </AvaButton>
             </div>
@@ -323,6 +336,21 @@ export function ListenUi() {
             >
               {statusLabel}
             </div>
+            {phase === 'recording' && elapsedMs >= 25_000 && (
+              <div
+                style={{
+                  padding: '6px 14px',
+                  background: 'rgba(232,123,58,0.18)',
+                  border: '1px solid rgba(232,123,58,0.45)',
+                  borderRadius: 24,
+                  font: `600 12px/1 ${SANS}`,
+                  color: '#FFD2A8',
+                  letterSpacing: 0.4,
+                }}
+              >
+                {Math.max(0, Math.ceil((MAX_DURATION_MS - elapsedMs) / 1000))} s restantes
+              </div>
+            )}
           </>
         )}
       </div>
