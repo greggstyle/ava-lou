@@ -1,65 +1,141 @@
-import Image from "next/image";
+import { redirect } from 'next/navigation';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+import { HomeMicDock } from '@/components/home-mic-dock';
+import { AvaTopBar, AvaCard, AvaLabel, AvaListRow, AvaButton, C, SERIF, SANS } from '@/components/ava';
+import { formatPriceFR, formatDateRelativeFR } from '@/lib/format';
 
-export default function Home() {
+export const dynamic = 'force-dynamic';
+
+export default async function HomePage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect('/login');
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name, is_drom, vat_default')
+    .eq('id', user.id)
+    .maybeSingle();
+
+  const greeting = profile?.full_name?.split(' ')[0] || process.env.NEXT_PUBLIC_DEFAULT_GREETING || 'Lou';
+
+  const { data: recentInvoices } = await supabase
+    .from('invoices')
+    .select('id, number, amount_ttc, status, created_at, client_id, clients(name)')
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  const { data: openSuggestion } = await supabase
+    .from('quotes')
+    .select('id, number, client_id, clients(name), created_at')
+    .eq('status', 'envoyé')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <AvaTopBar
+        title={`Bonjour ${greeting}`}
+        right={
+          <Link href="/dashboard" aria-label="Tableau de bord" style={{ color: C.ink, padding: 4 }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
+          </Link>
+        }
+      />
+
+      <div style={{ padding: '8px 20px 0', overflowY: 'auto', flex: 1 }}>
+        <h1
+          style={{
+            font: `600 30px/1.15 ${SERIF}`,
+            color: C.ink,
+            letterSpacing: '-0.01em',
+            marginTop: 6,
+          }}
+        >
+          Qu&apos;est-ce qu&apos;on règle <em style={{ fontStyle: 'italic' }}>aujourd&apos;hui</em> ?
+        </h1>
+
+        {openSuggestion && (
+          <div style={{ marginTop: 24 }}>
+            <AvaLabel style={{ marginBottom: 10 }}>Suggestion d&apos;AVA</AvaLabel>
+            <AvaCard padding={16}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <div style={{ width: 6, height: 6, borderRadius: 3, background: C.orange, marginTop: 8, flex: 'none' }} />
+                <div>
+                  <div style={{ font: `400 16px/1.45 ${SERIF}`, color: C.ink }}>
+                    {(openSuggestion.clients as unknown as { name: string } | null)?.name ?? 'Un client'} attend une <em>réponse</em> sur le devis {openSuggestion.number}.
+                  </div>
+                </div>
+              </div>
+            </AvaCard>
+          </div>
+        )}
+
+        <div style={{ marginTop: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <AvaLabel>Récents</AvaLabel>
+            <Link href="/factures" style={{ font: `500 12px/1 ${SANS}`, color: C.muted, textDecoration: 'none' }}>
+              Tout voir →
+            </Link>
+          </div>
+          {recentInvoices && recentInvoices.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {recentInvoices.map((inv) => (
+                <Link key={inv.id} href={`/factures/${inv.id}`} style={{ textDecoration: 'none' }}>
+                  <AvaListRow
+                    name={(inv.clients as unknown as { name: string } | null)?.name ?? 'Sans client'}
+                    sub={`${inv.number ?? 'Brouillon'} · ${formatDateRelativeFR(inv.created_at)}`}
+                    amount={formatPriceFR(Number(inv.amount_ttc))}
+                    status={inv.status === 'payée' ? 'paid' : inv.status === 'en_retard' ? 'overdue' : undefined}
+                  />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <AvaCard padding={20}>
+              <div style={{ font: `400 14px/1.5 ${SANS}`, color: C.muted }}>
+                Aucune facture pour l&apos;instant. Maintenez le micro et dictez votre première facture, ou créez-en une à la main.
+              </div>
+              <div style={{ marginTop: 12, display: 'flex', gap: 8 }}>
+                <Link href="/factures/nouvelle"><AvaButton kind="light">Saisir à la main</AvaButton></Link>
+                <Link href="/clients/nouveau"><AvaButton kind="ghost">Ajouter un client</AvaButton></Link>
+              </div>
+            </AvaCard>
+          )}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          <Link href="/factures" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{ cursor: 'pointer' }}>
+              <AvaLabel>Factures</AvaLabel>
+              <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Voir tout</div>
+            </AvaCard>
+          </Link>
+          <Link href="/devis" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{ cursor: 'pointer' }}>
+              <AvaLabel>Devis</AvaLabel>
+              <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Voir tout</div>
+            </AvaCard>
+          </Link>
+          <Link href="/clients" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{ cursor: 'pointer' }}>
+              <AvaLabel>Clients</AvaLabel>
+              <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Voir tout</div>
+            </AvaCard>
+          </Link>
         </div>
-      </main>
-    </div>
+
+        <div style={{ height: 200 }} />
+      </div>
+
+      <HomeMicDock />
+    </main>
   );
 }
