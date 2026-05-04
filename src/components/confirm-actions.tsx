@@ -117,3 +117,140 @@ export function LowConfidenceActions({
     </div>
   );
 }
+
+/**
+ * mark_paid: artisan dictates "M. X a payé". Server pre-identified the candidate
+ * invoice. User confirms → POST /confirm → status updates to 'payée'.
+ */
+export function MarkPaidActions({
+  actionId,
+  invoiceId,
+}: {
+  actionId: string;
+  invoiceId: string;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function onConfirm() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/actions/${actionId}/confirm`, { method: 'POST' });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || 'Erreur.');
+      }
+      router.push(`/factures/${invoiceId}`);
+      router.refresh();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erreur.');
+      setBusy(false);
+    }
+  }
+
+  async function onCancel() {
+    try { await fetch(`/api/actions/${actionId}`, { method: 'DELETE' }); } catch {}
+    router.push('/');
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <AvaButton kind="validate" full onClick={onConfirm} disabled={busy}>
+        {busy ? 'Mise à jour…' : 'Confirmer le paiement'}
+      </AvaButton>
+      <AvaButton kind="ghost" full onClick={onCancel} disabled={busy}>
+        Annuler
+      </AvaButton>
+      {error && (
+        <div style={{ font: `500 13px/1.4 ${SANS}`, color: C.warn, textAlign: 'center' }}>
+          {error}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * send_reminder: artisan dictates "relance Mme Hoarau". Server drafted the email
+ * body. User opens their mail client via mailto.
+ */
+export function ReminderActions({
+  actionId,
+  to,
+  subject,
+  body,
+}: {
+  actionId: string;
+  to: string;
+  subject: string;
+  body: string;
+}) {
+  const router = useRouter();
+  const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  function onSendClick() {
+    // Mark action executed (best-effort, fire-and-forget)
+    void fetch(`/api/actions/${actionId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'executed' }),
+    }).catch(() => {});
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <a
+        href={mailto}
+        onClick={onSendClick}
+        style={{
+          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+          gap: 8, height: 50, padding: '0 20px', background: C.green, color: '#FFFFFF',
+          textDecoration: 'none', borderRadius: 14, font: `600 16px/1 ${SANS}`,
+        }}
+      >
+        Ouvrir mon client mail
+      </a>
+      <AvaButton kind="ghost" full onClick={() => {
+        void fetch(`/api/actions/${actionId}`, { method: 'DELETE' }).catch(() => {});
+        router.push('/');
+      }}>
+        Annuler la relance
+      </AvaButton>
+    </div>
+  );
+}
+
+/**
+ * Read-only consultation result (financial status, list).
+ * Just a "next" action and a back button.
+ */
+export function ReadOnlyActions({
+  actionId,
+  primaryHref,
+  primaryLabel,
+}: {
+  actionId: string;
+  primaryHref: string;
+  primaryLabel: string;
+}) {
+  const router = useRouter();
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <AvaButton kind="primary" full onClick={() => {
+        void fetch(`/api/actions/${actionId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'executed' }),
+        }).catch(() => {});
+        router.push(primaryHref);
+      }}>
+        {primaryLabel}
+      </AvaButton>
+      <AvaButton kind="ghost" full onClick={() => router.push('/')}>
+        Retour à l&apos;accueil
+      </AvaButton>
+    </div>
+  );
+}

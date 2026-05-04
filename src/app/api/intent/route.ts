@@ -2,6 +2,12 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { extractIntent } from '@/lib/claude';
+import {
+  enrichForMarkPaid,
+  enrichForFinancialStatus,
+  enrichForSendReminder,
+  enrichForInvoiceList,
+} from '@/lib/intent-enrich';
 
 export const runtime = 'nodejs';
 
@@ -53,16 +59,42 @@ export async function POST(req: Request) {
       is_drom: profile?.is_drom ?? undefined,
     });
 
+    // Enrich with server-side data when intent is consultation/action-on-existing
+    let entities = result.entities;
+    let ava_response = result.ava_response;
+    try {
+      if (result.intent === 'mark_paid') {
+        const enriched = await enrichForMarkPaid(supabase, user.id, result);
+        entities = enriched.entities;
+        ava_response = enriched.ava_response;
+      } else if (result.intent === 'get_financial_status') {
+        const enriched = await enrichForFinancialStatus(supabase, user.id, result);
+        entities = enriched.entities;
+        ava_response = enriched.ava_response;
+      } else if (result.intent === 'send_reminder') {
+        const enriched = await enrichForSendReminder(supabase, user.id, result);
+        entities = enriched.entities;
+        ava_response = enriched.ava_response;
+      } else if (result.intent === 'get_invoice_list') {
+        const enriched = await enrichForInvoiceList(result);
+        entities = enriched.entities;
+        ava_response = enriched.ava_response;
+      }
+    } catch (enrichErr) {
+      console.warn('[intent] enrichment failed:', enrichErr);
+      // Continue with raw result — confirm screen will use what's available
+    }
+
     const { data: action, error: insertErr } = await supabase
       .from('ava_actions')
       .insert({
         user_id: user.id,
         input_raw: text,
         intent: result.intent,
-        entities: result.entities,
+        entities,
         confidence: result.confidence,
         status: 'pending',
-        ava_response: result.ava_response,
+        ava_response,
       })
       .select('id')
       .single();
@@ -78,7 +110,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       actionId: action.id,
       intent: result.intent,
-      ava_response: result.ava_response,
+      ava_response,
       confidence: result.confidence,
     });
   } catch (err) {

@@ -104,6 +104,7 @@ export type AvaIntent =
   | 'send_reminder'
   | 'get_financial_status'
   | 'get_invoice_list'
+  | 'mark_paid'
   | 'schedule_appointment'
   | 'send_document'
   | 'find_document'

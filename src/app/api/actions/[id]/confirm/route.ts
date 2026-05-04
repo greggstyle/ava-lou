@@ -209,7 +209,39 @@ export async function POST(
     return NextResponse.json({ target_table: table, target_id: inserted.id });
   }
 
-  // Unknown intent path — release claim so it doesn't stick at 'executing'
+  // mark_paid: update invoice status to 'payée'
+  if (intent === 'mark_paid') {
+    const candidateId = (entities as Partial<IntentEntities> & { candidate_invoice_id?: string }).candidate_invoice_id;
+    if (!candidateId) {
+      await supabase.from('ava_actions').update({ status: 'pending' }).eq('id', id).eq('user_id', user.id).eq('status', 'executing');
+      return NextResponse.json(
+        { error: 'Pas de facture identifiée à marquer. Précisez le client.' },
+        { status: 400 },
+      );
+    }
+    const { data: updated, error: upErr } = await supabase
+      .from('invoices')
+      .update({ status: 'payée' })
+      .eq('id', candidateId)
+      .eq('user_id', user.id)
+      .select('id')
+      .maybeSingle();
+    if (upErr || !updated) {
+      await supabase.from('ava_actions').update({ status: 'pending' }).eq('id', id).eq('user_id', user.id).eq('status', 'executing');
+      return NextResponse.json(
+        { error: "Impossible de mettre à jour la facture." },
+        { status: 500 },
+      );
+    }
+    await supabase
+      .from('ava_actions')
+      .update({ status: 'executed', target_table: 'invoices', target_id: updated.id })
+      .eq('id', id)
+      .eq('user_id', user.id);
+    return NextResponse.json({ target_table: 'invoices', target_id: updated.id, marked_paid: true });
+  }
+
+  // Unknown / not implemented — release claim
   await supabase
     .from('ava_actions')
     .update({ status: 'pending' })
