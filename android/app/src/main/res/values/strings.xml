@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">AVA</string>
+    <string name="title_activity_main">AVA</string>
+    <string name="package_name">fr.digidatale.ava</string>
+    <string name="custom_url_scheme">fr.digidatale.ava</string>
+</resources>
