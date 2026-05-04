@@ -9,14 +9,40 @@ PWA voice-first où l'artisan parle, AVA structure, et la facture s'écrit toute
 
 ---
 
-## V0 (livrable J+1)
+## Versions
 
-- **Auth** : magic link email via Supabase Auth
-- **CRUD** : Clients, Factures, Devis (numérotation auto `FAC-2026-XXX`)
-- **Flux vocal** : `/listen` → MediaRecorder + waveform live → OpenAI Whisper (fr) → Anthropic Claude Sonnet 4.5 (extraction d'intent + entités) → écran de confirmation `AVA a compris :` → INSERT Supabase
-- **Dashboard** : KPIs trésorerie (à encaisser, en retard, encaissé ce mois)
-- **PWA installable** : manifest + icônes 192/512
-- **Design system Onde** : tokens, fonts, primitives portées en TSX
+### V0 — fondations
+- Magic-link auth, CRUD Clients/Factures/Devis, dashboard, PWA, design Onde
+- Flux vocal : MediaRecorder → Whisper (fr) → Claude Sonnet → confirm → INSERT
+
+### V0.7 — conformité française
+- Mentions légales art. L441-9 + R441-3 (composant `<LegalMentions />`)
+- SIRET autocomplete via recherche-entreprises.api.gouv.fr
+- 5 fixes P0 audit (idempotency, TVA DROM, mic gesture, escape hatch, VAT 5,5%)
+- Capacitor iOS + Android (shell natif chargeant la prod web)
+
+### V1 — robustness + page publique
+- `/voir/facture/[id]` + `/voir/devis/[id]` : URL partageable imprimable PDF
+- Whisper 25s timeout + retry, Claude 20s timeout + retry, zod-validated response
+- Whisper failure preserves blob (Renvoyer = re-POST same blob)
+- Match client fuzzy (exact → %name% → reverse-substring)
+
+### V2 — voice intents avancés
+- `mark_paid` : « M. Payet a payé »
+- `get_financial_status` : « Qu'est-ce qui rentre ? » (4 KPI cards live)
+- `send_reminder` : « Relance Mme Hoarau » (drafts polite email + mailto)
+- `get_invoice_list`, `find_document`, `send_document`
+
+### V3 — dashboard intelligence + historique
+- Dashboard : delta mois vs mois dernier, top 5 clients en retard, activité récente
+- Page `/historique` (100 dernières actions vocales)
+- Dictation tips sur `/listen` idle screen
+
+### V3.5 — proactivité
+- Vercel cron lundi 7h30 (`/api/cron/weekly`) → notifications `weekly_recap`
+- Bannière "AVA vous suggère" sur la home
+- PWA install hint (iOS-aware, dismissible)
+- Prompt Claude calibré avec 7 exemples DROM concrets
 
 ## Stack
 
