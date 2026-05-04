@@ -12,7 +12,7 @@ import {
 } from '@/components/ava';
 import { formatPriceFR, computeTotals } from '@/lib/format';
 import type { IntentEntities, LineItem } from '@/lib/types';
-import { ConfirmActions, RetryButton } from '@/components/confirm-actions';
+import { ConfirmActions, LowConfidenceActions } from '@/components/confirm-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,7 +44,7 @@ export default async function ConfirmPage({ params }: PageProps) {
     (action.ava_response as string | null) ??
     "Je n'ai pas tout compris. Pouvez-vous reformuler ?";
 
-  const isUnknown = intent === 'unknown' || confidence < 0.75;
+  const isUnknown = intent === 'unknown' || confidence < 0.5;
   const isInvoice = intent === 'create_invoice';
   const isQuote = intent === 'create_quote';
   const isDoc = isInvoice || isQuote;
@@ -59,12 +59,18 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 24, flex: 1 }}>
+          <AvaLabel>AVA a entendu</AvaLabel>
+          {action.input_raw && (
+            <div style={{ font: `400 14px/1.5 ${SANS}`, color: C.muted, fontStyle: 'italic' }}>
+              « {action.input_raw} »
+            </div>
+          )}
           <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>
             {avaResponse}
           </div>
           <AvaDisclaimer />
           <div style={{ marginTop: 'auto' }}>
-            <RetryButton />
+            <LowConfidenceActions actionId={id} intent={intent} />
           </div>
         </div>
       </main>

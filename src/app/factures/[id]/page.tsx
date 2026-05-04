@@ -158,6 +158,50 @@ export default function FactureDetailPage() {
     router.refresh();
   }
 
+  function buildMailto(inv: InvoiceWithClient): string | null {
+    const client = inv.clients;
+    if (!client?.email) return null;
+    const subject = `Facture ${inv.number ?? ''} — ${formatDateFR(inv.issue_date)}`;
+    const lines = (inv.line_items ?? []) as LineItem[];
+    const detail = lines
+      .map((l) => `- ${l.label} : ${l.qty} × ${formatPriceFR(l.unit_price)} = ${formatPriceFR(l.qty * l.unit_price)}`)
+      .join('\n');
+    const body = [
+      `Bonjour ${client.name},`,
+      '',
+      `Vous trouverez ci-dessous le détail de votre facture ${inv.number ?? ''} émise le ${formatDateFR(inv.issue_date)}.`,
+      '',
+      'DÉTAIL',
+      detail || '- (à préciser)',
+      '',
+      `TOTAL HT : ${formatPriceFR(Number(inv.amount_ht))}`,
+      `TVA (${inv.vat_rate} %) : ${formatPriceFR(Number(inv.amount_vat))}`,
+      `TOTAL TTC : ${formatPriceFR(Number(inv.amount_ttc))}`,
+      '',
+      `Échéance de paiement : ${inv.due_date ? formatDateFR(inv.due_date) : 'à réception'}`,
+      '',
+      inv.notes ? `Notes : ${inv.notes}` : '',
+      '',
+      'Cordialement,',
+      '',
+      '—',
+      'Envoyé via AVA — Assistance Vocale Administrative',
+    ]
+      .filter((l) => l !== null && l !== undefined)
+      .join('\n');
+    return `mailto:${encodeURIComponent(client.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  function onSendEmail() {
+    if (!invoice || invoice.status !== 'brouillon') return;
+    // Fire-and-forget — user is leaving the tab, no need to await
+    void fetch(`/api/factures/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'envoyée' }),
+    }).catch(() => {});
+  }
+
   if (loading) {
     return (
       <main style={{ minHeight: '100vh', background: C.bone }}>
@@ -286,6 +330,44 @@ export default function FactureDetailPage() {
                   </AvaButton>
                 ))}
               </div>
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <AvaLabel style={{ marginBottom: 8 }}>Envoyer au client</AvaLabel>
+              {(() => {
+                const mailto = buildMailto(invoice);
+                if (mailto) {
+                  return (
+                    <a
+                      href={mailto}
+                      onClick={onSendEmail}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        height: 50,
+                        padding: '0 20px',
+                        background: C.green,
+                        color: '#FFFFFF',
+                        textDecoration: 'none',
+                        borderRadius: 14,
+                        font: `600 16px/1 ${SANS}`,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Envoyer par email
+                    </a>
+                  );
+                }
+                return (
+                  <AvaCard padding={14} style={{ background: C.soft }}>
+                    <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.ink2 }}>
+                      Ajoutez l&apos;email du client pour pouvoir l&apos;envoyer.
+                    </div>
+                  </AvaCard>
+                );
+              })()}
             </div>
 
             <div style={{ marginTop: 28, display: 'flex', justifyContent: 'center' }}>

@@ -12,6 +12,25 @@ export default async function HomePage() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
 
+  // One-time demo seed: if user has zero clients/invoices/quotes, create 3 sample clients.
+  // Safe to re-run if user later deletes everything (idempotent on truly empty state).
+  try {
+    const [clientsCount, invoicesCount, quotesCount] = await Promise.all([
+      supabase.from('clients').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+      supabase.from('invoices').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+      supabase.from('quotes').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+    ]);
+    if ((clientsCount.count ?? 0) === 0 && (invoicesCount.count ?? 0) === 0 && (quotesCount.count ?? 0) === 0) {
+      await supabase.from('clients').insert([
+        { user_id: user.id, name: 'M. Payet', email: 'payet.demo@example.fr', phone: '06 12 34 56 78', address: '12 rue des Lilas, Saint-Denis' },
+        { user_id: user.id, name: 'Mme Hoarau', email: 'hoarau.demo@example.fr', phone: '06 23 45 67 89', address: '5 chemin de la Source, Saint-Pierre' },
+        { user_id: user.id, name: 'M. Técher', email: 'techer.demo@example.fr', phone: '06 34 56 78 90', address: '8 boulevard du Front de Mer, Saint-Paul' },
+      ]);
+    }
+  } catch {
+    // Silent — seeding is non-critical, the app still works without it.
+  }
+
   const { data: profile } = await supabase
     .from('profiles')
     .select('full_name, is_drom, vat_default')

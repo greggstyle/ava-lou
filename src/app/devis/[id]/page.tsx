@@ -159,6 +159,49 @@ export default function DevisDetailPage() {
     router.refresh();
   }
 
+  function buildMailto(q: QuoteWithClient): string | null {
+    const client = q.clients;
+    if (!client?.email) return null;
+    const subject = `Devis ${q.number ?? ''} — ${formatDateFR(q.issue_date)}`;
+    const lines = (q.line_items ?? []) as LineItem[];
+    const detail = lines
+      .map((l) => `- ${l.label} : ${l.qty} × ${formatPriceFR(l.unit_price)} = ${formatPriceFR(l.qty * l.unit_price)}`)
+      .join('\n');
+    const body = [
+      `Bonjour ${client.name},`,
+      '',
+      `Vous trouverez ci-dessous le détail de votre devis ${q.number ?? ''} émis le ${formatDateFR(q.issue_date)}.`,
+      '',
+      'DÉTAIL',
+      detail || '- (à préciser)',
+      '',
+      `TOTAL HT : ${formatPriceFR(Number(q.amount_ht))}`,
+      `TVA (${q.vat_rate} %) : ${formatPriceFR(Number(q.amount_vat))}`,
+      `TOTAL TTC : ${formatPriceFR(Number(q.amount_ttc))}`,
+      '',
+      `Validité jusqu'au : ${q.expiry_date ? formatDateFR(q.expiry_date) : '30 jours'}`,
+      '',
+      q.notes ? `Notes : ${q.notes}` : '',
+      '',
+      'Cordialement,',
+      '',
+      '—',
+      'Envoyé via AVA — Assistance Vocale Administrative',
+    ]
+      .filter((l) => l !== null && l !== undefined)
+      .join('\n');
+    return `mailto:${encodeURIComponent(client.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  }
+
+  function onSendEmail() {
+    if (!quote || quote.status !== 'brouillon') return;
+    void fetch(`/api/devis/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'envoyé' }),
+    }).catch(() => {});
+  }
+
   async function onConvert() {
     if (!confirm('Convertir ce devis en facture ?')) return;
     setConverting(true);
@@ -307,6 +350,44 @@ export default function DevisDetailPage() {
                   </AvaButton>
                 ))}
               </div>
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <AvaLabel style={{ marginBottom: 8 }}>Envoyer au client</AvaLabel>
+              {(() => {
+                const mailto = buildMailto(quote);
+                if (mailto) {
+                  return (
+                    <a
+                      href={mailto}
+                      onClick={onSendEmail}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8,
+                        height: 50,
+                        padding: '0 20px',
+                        background: C.green,
+                        color: '#FFFFFF',
+                        textDecoration: 'none',
+                        borderRadius: 14,
+                        font: `600 16px/1 ${SANS}`,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Envoyer par email
+                    </a>
+                  );
+                }
+                return (
+                  <AvaCard padding={14} style={{ background: C.soft }}>
+                    <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.ink2 }}>
+                      Ajoutez l&apos;email du client pour pouvoir l&apos;envoyer.
+                    </div>
+                  </AvaCard>
+                );
+              })()}
             </div>
 
             <div style={{ marginTop: 18 }}>

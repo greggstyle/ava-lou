@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { MicFab } from '@/components/mic-fab';
 
 export const metadata: Metadata = {
   title: 'AVA — Assistance Vocale Administrative',
@@ -46,6 +47,7 @@ export default function RootLayout({
         }}
       >
         {children}
+        <MicFab />
       </body>
     </html>
   );

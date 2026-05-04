@@ -1,12 +1,14 @@
 'use client';
 
 import * as React from 'react';
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Plus, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { AvaTopBar, AvaCard, AvaField, AvaButton, AvaDisclaimer, AvaLabel, C, SERIF, SANS, TNUM } from '@/components/ava';
 import { computeTotals, formatPriceFR } from '@/lib/format';
+import type { IntentEntities, LineItem } from '@/lib/types';
 
 const inputStyle: React.CSSProperties = {
   background: C.paper,
@@ -27,12 +29,15 @@ interface LineRow {
   unit_price: string;
 }
 
-export default function NouveauDevisPage() {
+function NouveauDevisForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const actionId = searchParams.get('action');
   const todayISO = new Date().toISOString().slice(0, 10);
 
   const [clients, setClients] = React.useState<{ id: string; name: string }[]>([]);
   const [clientId, setClientId] = React.useState<string>('');
+  const [pendingClientName, setPendingClientName] = React.useState<string>('');
   const [issueDate, setIssueDate] = React.useState(todayISO);
   const [expiryDate, setExpiryDate] = React.useState('');
   const [vatRate, setVatRate] = React.useState<number>(20);
@@ -40,17 +45,58 @@ export default function NouveauDevisPage() {
   const [notes, setNotes] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [prefilledFrom, setPrefilledFrom] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const supabase = createClient();
-    supabase
-      .from('clients')
-      .select('id, name')
-      .order('name', { ascending: true })
-      .then(({ data }) => {
-        if (data) setClients(data);
-      });
-  }, []);
+    let cancelled = false;
+    (async () => {
+      const { data: clientsData } = await supabase
+        .from('clients')
+        .select('id, name')
+        .order('name', { ascending: true });
+      if (cancelled) return;
+      const list = clientsData ?? [];
+      setClients(list);
+
+      if (!actionId) return;
+      const { data: action } = await supabase
+        .from('ava_actions')
+        .select('intent, entities, input_raw')
+        .eq('id', actionId)
+        .maybeSingle();
+      if (cancelled || !action) return;
+      const entities = (action.entities ?? {}) as Partial<IntentEntities>;
+
+      if (entities.client_name) {
+        const match = list.find(
+          (c) => c.name.toLowerCase().trim() === entities.client_name?.toLowerCase().trim(),
+        );
+        if (match) setClientId(match.id);
+        else setPendingClientName(entities.client_name);
+      }
+
+      if (Array.isArray(entities.line_items) && entities.line_items.length > 0) {
+        const linesFromEntities: LineRow[] = (entities.line_items as LineItem[]).map((l) => ({
+          label: l.label ?? '',
+          qty: String(l.qty ?? 1),
+          unit_price: l.unit_price != null ? String(l.unit_price).replace('.', ',') : '',
+        }));
+        setLines(linesFromEntities.length > 0 ? linesFromEntities : [{ label: '', qty: '1', unit_price: '' }]);
+        const firstVat = entities.line_items.find((l) => typeof l?.vat_rate === 'number');
+        if (firstVat && typeof firstVat.vat_rate === 'number') setVatRate(firstVat.vat_rate);
+      }
+
+      if (action.input_raw && !entities.notes) setNotes(`Dictée vocale : « ${action.input_raw} »`);
+      else if (entities.notes) setNotes(entities.notes);
+
+      if (entities.due_date) setExpiryDate(entities.due_date);
+      setPrefilledFrom(action.input_raw ?? 'votre dictée');
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [actionId]);
 
   const numericLines = lines.map((l) => ({
     label: l.label,
@@ -111,6 +157,28 @@ export default function NouveauDevisPage() {
       <AvaTopBar title="Nouveau devis" onBack={() => router.back()} />
 
       <form onSubmit={onSubmit} style={{ padding: '8px 20px 120px', flex: 1, overflowY: 'auto' }}>
+        {prefilledFrom && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: '12px 14px',
+              background: C.greenSoft,
+              border: `1px solid ${C.green}33`,
+              borderRadius: 12,
+              display: 'flex',
+              gap: 10,
+              alignItems: 'flex-start',
+              font: `400 13px/1.45 ${SANS}`,
+              color: C.ink,
+            }}
+          >
+            <div style={{ width: 6, height: 6, borderRadius: 3, background: C.green, marginTop: 7, flex: 'none' }} />
+            <div>
+              <em style={{ fontFamily: SERIF, fontStyle: 'italic' }}>Pré-rempli</em> depuis votre dictée. Vérifiez et complétez ce qui manque.
+            </div>
+          </div>
+        )}
+
         <AvaCard padding={18} style={{ display: 'flex', flexDirection: 'column', gap: 16, marginTop: 12 }}>
           <AvaField label="Client">
             <select
@@ -123,6 +191,30 @@ export default function NouveauDevisPage() {
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
+            {pendingClientName && !clientId && (
+              <div style={{ marginTop: 8, padding: '10px 12px', background: C.soft, border: `1px solid ${C.line}`, borderRadius: 10, font: `400 13px/1.45 ${SANS}`, color: C.ink2 }}>
+                AVA a entendu « <strong>{pendingClientName}</strong> » — ce client n&apos;existe pas encore.{' '}
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const res = await fetch('/api/clients', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ name: pendingClientName }),
+                    });
+                    if (res.ok) {
+                      const created = await res.json();
+                      setClients((prev) => [...prev, { id: created.id, name: created.name }].sort((a, b) => a.name.localeCompare(b.name)));
+                      setClientId(created.id);
+                      setPendingClientName('');
+                    }
+                  }}
+                  style={{ background: 'transparent', border: 'none', color: C.green, font: `600 13px/1.45 ${SANS}`, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}
+                >
+                  Créer maintenant
+                </button>
+              </div>
+            )}
           </AvaField>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
@@ -265,5 +357,13 @@ export default function NouveauDevisPage() {
         </div>
       </form>
     </main>
+  );
+}
+
+export default function NouveauDevisPage() {
+  return (
+    <Suspense fallback={null}>
+      <NouveauDevisForm />
+    </Suspense>
   );
 }

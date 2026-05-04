@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AvaButton, AvaWaveform, C, SERIF, SANS, TNUM } from '@/components/ava';
 
 type Phase = 'init' | 'recording' | 'processing' | 'error';
@@ -10,6 +10,8 @@ const MAX_DURATION_MS = 30_000;
 
 export function ListenUi() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnPathRaw = searchParams.get('return');
   const [phase, setPhase] = React.useState<Phase>('init');
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [elapsedMs, setElapsedMs] = React.useState(0);
@@ -71,15 +73,21 @@ export function ListenUi() {
           const j = await intentRes.json().catch(() => ({}));
           throw new Error(j.error || 'Erreur côté AVA. Réessayez.');
         }
-        const intent = (await intentRes.json()) as { actionId: string };
-        router.push(`/confirm/${intent.actionId}`);
+        const intent = (await intentRes.json()) as { actionId: string; intent?: string };
+        if (returnPathRaw) {
+          const returnPath = decodeURIComponent(returnPathRaw);
+          const sep = returnPath.includes('?') ? '&' : '?';
+          router.push(`${returnPath}${sep}action=${intent.actionId}`);
+        } else {
+          router.push(`/confirm/${intent.actionId}`);
+        }
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "Je n'ai pas saisi — réessayez ?";
         setErrorMsg(msg);
         setPhase('error');
       }
     },
-    [router],
+    [router, returnPathRaw],
   );
 
   const stopRecording = React.useCallback(() => {
