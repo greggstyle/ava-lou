@@ -4,7 +4,7 @@ import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AvaButton, AvaWaveform, C, SERIF, SANS, TNUM } from '@/components/ava';
 
-type Phase = 'init' | 'recording' | 'processing' | 'error';
+type Phase = 'idle' | 'init' | 'recording' | 'processing' | 'error';
 
 const MAX_DURATION_MS = 30_000;
 
@@ -12,7 +12,7 @@ export function ListenUi() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const returnPathRaw = searchParams.get('return');
-  const [phase, setPhase] = React.useState<Phase>('init');
+  const [phase, setPhase] = React.useState<Phase>('idle');
   const [errorMsg, setErrorMsg] = React.useState<string | null>(null);
   const [elapsedMs, setElapsedMs] = React.useState(0);
   const [level, setLevel] = React.useState(0);
@@ -194,8 +194,8 @@ export function ListenUi() {
     }
   }, [cleanup, handleProcess, stopRecording]);
 
+  // No auto-start — wait for user gesture (iOS Safari mic permission requires it)
   React.useEffect(() => {
-    void startRecording();
     return () => {
       cleanup();
       try {
@@ -247,10 +247,41 @@ export function ListenUi() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: 32,
+          gap: 28,
         }}
       >
-        {phase === 'error' ? (
+        {phase === 'idle' ? (
+          <>
+            <svg width="120" height="60" viewBox="0 0 56 28" aria-hidden="true">
+              <g fill={C.paper}>
+                <rect x="0"  y="11" width="3" height="6"  rx="1.5" opacity="0.6"/>
+                <rect x="6"  y="7"  width="3" height="14" rx="1.5" opacity="0.7"/>
+                <rect x="12" y="3"  width="3" height="22" rx="1.5" opacity="0.85"/>
+                <rect x="18" y="0"  width="3" height="28" rx="1.5"/>
+                <rect x="24" y="5"  width="3" height="18" rx="1.5" opacity="0.85"/>
+                <rect x="30" y="9"  width="3" height="10" rx="1.5" opacity="0.7"/>
+                <rect x="36" y="12" width="3" height="4"  rx="1.5" opacity="0.6"/>
+              </g>
+            </svg>
+            <div style={{ font: `400 26px/1.3 ${SERIF}`, color: C.paper, textAlign: 'center', maxWidth: 320 }}>
+              Touchez pour <em style={{ fontStyle: 'italic' }}>parler</em>
+            </div>
+            <div style={{ font: `400 13px/1.5 ${SANS}`, color: 'rgba(255,255,255,0.7)', textAlign: 'center', maxWidth: 280 }}>
+              AVA va vous demander l&apos;accès au micro la première fois.
+            </div>
+            <AvaButton kind="validate" onClick={() => void startRecording()} style={{ minWidth: 240 }}>
+              Démarrer
+            </AvaButton>
+            <div style={{
+              marginTop: 8, padding: '10px 14px',
+              background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 12, color: 'rgba(255,255,255,0.78)',
+              font: `400 12px/1.45 ${SANS}`, maxWidth: 320, textAlign: 'center',
+            }}>
+              <em style={{ fontFamily: SERIF, fontStyle: 'italic' }}>Brouillon</em> — rien n&apos;est envoyé sans votre accord.
+            </div>
+          </>
+        ) : phase === 'error' ? (
           <>
             <div
               style={{
@@ -296,7 +327,7 @@ export function ListenUi() {
         )}
       </div>
 
-      {phase !== 'error' && (
+      {phase !== 'error' && phase !== 'idle' && (
         <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: 12 }}>
           <AvaButton
             kind="validate"

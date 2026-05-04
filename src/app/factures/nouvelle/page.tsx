@@ -21,7 +21,7 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
 };
 
-const VAT_OPTIONS = [0, 8.5, 10, 20];
+const VAT_OPTIONS = [0, 5.5, 8.5, 10, 20];
 
 interface LineRow {
   label: string;
@@ -51,13 +51,22 @@ function NouvelleFactureForm() {
     const supabase = createClient();
     let cancelled = false;
     (async () => {
-      const { data: clientsData } = await supabase
-        .from('clients')
-        .select('id, name')
-        .order('name', { ascending: true });
+      const [{ data: clientsData }, { data: profileData }] = await Promise.all([
+        supabase.from('clients').select('id, name').order('name', { ascending: true }),
+        supabase.from('profiles').select('vat_default, is_drom').maybeSingle(),
+      ]);
       if (cancelled) return;
       const list = clientsData ?? [];
       setClients(list);
+
+      // Profile-based VAT default (DROM users get 8.5 unless they set otherwise)
+      if (profileData) {
+        const fallback = profileData.is_drom ? 8.5 : 20;
+        const profileVat = profileData.vat_default !== null && profileData.vat_default !== undefined
+          ? Number(profileData.vat_default)
+          : fallback;
+        setVatRate(profileVat);
+      }
 
       if (!actionId) return;
       const { data: action } = await supabase

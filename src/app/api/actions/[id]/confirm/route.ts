@@ -65,20 +65,21 @@ export async function POST(
     return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 });
   }
 
-  const { data: action, error: loadErr } = await supabase
+  // Atomic claim: only one request can transition pending -> executing.
+  // Prevents double-tap from creating duplicate invoices.
+  const { data: action, error: claimErr } = await supabase
     .from('ava_actions')
-    .select('*')
+    .update({ status: 'executing' })
     .eq('id', id)
     .eq('user_id', user.id)
+    .eq('status', 'pending')
+    .select('*')
     .maybeSingle();
 
-  if (loadErr || !action) {
-    return NextResponse.json({ error: 'Action introuvable.' }, { status: 404 });
-  }
-  if (action.status !== 'pending') {
+  if (claimErr || !action) {
     return NextResponse.json(
-      { error: 'Cette action a déjà été traitée.' },
-      { status: 400 },
+      { error: 'Action déjà traitée ou introuvable.' },
+      { status: 409 },
     );
   }
 
@@ -86,10 +87,12 @@ export async function POST(
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('vat_default')
+    .select('vat_default, is_drom')
     .eq('id', user.id)
     .maybeSingle();
-  const defaultVat = Number(profile?.vat_default ?? 20);
+  const defaultVat = Number(
+    profile?.vat_default ?? (profile?.is_drom ? 8.5 : 20),
+  );
 
   const intent = action.intent as string;
 
@@ -148,6 +151,13 @@ export async function POST(
 
     if (insertErr || !inserted) {
       console.error('[confirm] insert error', insertErr);
+      // Roll back the claim so the user can retry
+      await supabase
+        .from('ava_actions')
+        .update({ status: 'pending' })
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .eq('status', 'executing');
       return NextResponse.json(
         { error: "Impossible de créer le document." },
         { status: 500 },
@@ -166,6 +176,14 @@ export async function POST(
 
     return NextResponse.json({ target_table: table, target_id: inserted.id });
   }
+
+  // Unknown intent path — release claim so it doesn't stick at 'executing'
+  await supabase
+    .from('ava_actions')
+    .update({ status: 'pending' })
+    .eq('id', id)
+    .eq('user_id', user.id)
+    .eq('status', 'executing');
 
   return NextResponse.json(
     { error: 'Action non implémentée en V0.' },
