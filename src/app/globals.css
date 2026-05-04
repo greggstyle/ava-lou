@@ -1,26 +1,170 @@
 @import "tailwindcss";
 
+/* =============================================================
+   AVA · Direction "Onde" — Color & Type Tokens
+   Source: AVA Onde Design System / colors_and_type.css
+   ============================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+
+@font-face {
+  font-family: 'Inter Tight';
+  src: url('/fonts/InterTight-VariableFont_wght.ttf') format('truetype-variations'),
+       url('/fonts/InterTight-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter Tight';
+  src: url('/fonts/InterTight-Italic-VariableFont_wght.ttf') format('truetype-variations'),
+       url('/fonts/InterTight-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* COLOR — raw tokens */
+  --paper:        #FFFFFF;
+  --bone:         #F4F3EE;
+  --soft:         #F7F5EE;
+
+  --ink:          #0B1D33;
+  --ink-2:        #23344B;
+  --muted:        #6B7480;
+  --line:         #E5E3DA;
+
+  --green:        #1F9D55;
+  --green-2:      #22B865;
+  --green-soft:   #E6F6EC;
+
+  --orange:       #E87B3A;
+  --warn:         #C0552E;
+  --warm-yellow:  #FFF5CC;
+
+  --whatsapp:     #25D366;
+
+  /* COLOR — semantic aliases */
+  --bg-app:       var(--bone);
+  --bg-card:      var(--paper);
+  --bg-inset:     var(--soft);
+  --bg-listen:    var(--ink);
+
+  --fg-1:         var(--ink);
+  --fg-2:         var(--ink-2);
+  --fg-3:         var(--muted);
+  --fg-on-dark:   var(--paper);
+  --fg-on-action: var(--paper);
+
+  --border-hair:  var(--line);
+  --border-focus: var(--ink);
+
+  --accent-action:   var(--green);
+  --accent-validate: var(--green);
+  --accent-warm:     var(--orange);
+  --accent-error:    var(--warn);
+
+  /* RADII */
+  --r-badge:    4px;
+  --r-chip:     12px;
+  --r-card:     14px;
+  --r-button:   14px;
+  --r-pill:     24px;
+  --r-screen:   38px;
+
+  /* SPACING */
+  --s-1:  4px;  --s-2: 6px;  --s-3: 8px;  --s-4: 12px;
+  --s-5: 16px;  --s-6: 20px; --s-7: 24px; --s-8: 32px;
+
+  /* SHADOWS */
+  --shadow-pop: 0 8px 24px rgba(11, 29, 51, 0.08);
+  --shadow-mic: 0 12px 32px rgba(31, 157, 85, 0.24);
+
+  /* MOTION */
+  --ease:        cubic-bezier(0.2, 0.6, 0.2, 1);
+  --dur-press:   80ms;
+  --dur-chrome:  180ms;
+  --dur-screen:  240ms;
+
+  /* TYPE FAMILIES */
+  --font-serif:  "Instrument Serif", "Times New Roman", Georgia, serif;
+  --font-sans:   "Inter Tight", "Söhne", "General Sans", "Geist",
+                 -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-tnum:   "tnum" 1, "lnum" 1, "cv11" 1;
+
+  /* TYPE SCALE */
+  --t-display-1: 600 56px/1.05 var(--font-serif);
+  --t-display-2: 600 38px/1.10 var(--font-serif);
+  --t-display-3: 600 28px/1.15 var(--font-serif);
+  --t-display-4: 600 22px/1.25 var(--font-serif);
+  --t-recap:     400 20px/1.45 var(--font-serif);
+
+  --t-body:      400 15px/1.50 var(--font-sans);
+  --t-body-sm:   400 14px/1.50 var(--font-sans);
+  --t-button:    600 16px/1.20 var(--font-sans);
+  --t-meta:      500 13px/1.40 var(--font-sans);
+  --t-label:     600 11px/1.20 var(--font-sans);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* =============================================================
+   ELEMENT DEFAULTS
+   ============================================================= */
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg-app);
+  color: var(--fg-1);
+  font: var(--t-body);
+  font-feature-settings: var(--font-tnum);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+h1, .h1 { font: var(--t-display-3); color: var(--fg-1); letter-spacing: -0.01em; margin: 0; }
+h2, .h2 { font: var(--t-display-4); color: var(--fg-1); letter-spacing: -0.005em; margin: 0; }
+h3, .h3 { font: 600 17px/1.30 var(--font-sans); color: var(--fg-1); margin: 0; }
+p  { margin: 0; }
+em { font-style: italic; }
+
+.recap     { font: var(--t-recap); color: var(--fg-1); }
+.amount    { font: var(--t-display-2); font-feature-settings: var(--font-tnum); letter-spacing: -0.01em; }
+.amount-xl { font: var(--t-display-1); font-feature-settings: var(--font-tnum); letter-spacing: -0.015em; }
+
+.label {
+  font: var(--t-label);
+  text-transform: uppercase;
+  letter-spacing: 1.4px;
+  color: var(--fg-3);
+}
+.label.is-success { color: var(--green); }
+.label.is-warn    { color: var(--warn); }
+
+.meta { font: var(--t-meta); color: var(--fg-3); }
+
+.tnum { font-feature-settings: var(--font-tnum); font-variant-numeric: tabular-nums; }
+
+.muted { color: var(--fg-3); }
+.dim   { color: var(--fg-2); }
+
+button { font: var(--t-button); cursor: pointer; }
+
+input, textarea, select {
+  font: var(--t-body);
+  color: var(--fg-1);
+  background: var(--bg-card);
+  border: 1px solid var(--line);
+  border-radius: var(--r-button);
+  padding: 12px 14px;
+  outline: none;
+  width: 100%;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--ink);
+  box-shadow: 0 0 0 2px rgba(11, 29, 51, 0.08);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+@keyframes ava-blink { 50% { opacity: 0; } }
+@keyframes ava-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
