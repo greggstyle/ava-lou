@@ -5,6 +5,7 @@ import { HomeMicDock } from '@/components/home-mic-dock';
 import { AvaTopBar, AvaCard, AvaLabel, AvaListRow, AvaButton, C, SERIF, SANS } from '@/components/ava';
 import { formatPriceFR, formatDateRelativeFR } from '@/lib/format';
 import { NotificationsBanner } from '@/components/notifications-banner';
+import { InstallHint } from '@/components/install-hint';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,6 +94,8 @@ export default async function HomePage() {
         {notifications && notifications.length > 0 && (
           <NotificationsBanner initial={notifications} />
         )}
+
+        <InstallHint />
 
         {openSuggestion && (
           <div style={{ marginTop: 24 }}>

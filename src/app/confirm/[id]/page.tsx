@@ -59,6 +59,7 @@ export default async function ConfirmPage({ params }: PageProps) {
   const isReminder = intent === 'send_reminder';
   const isInvoiceList = intent === 'get_invoice_list';
   const isFind = intent === 'find_document';
+  const isSendDoc = intent === 'send_document';
 
   type EnrichedEntities = Partial<IntentEntities> & {
     candidate_invoice_id?: string;
@@ -78,6 +79,7 @@ export default async function ConfirmPage({ params }: PageProps) {
     reminder_body?: string;
     reminder_to?: string;
     list_filter?: string;
+    candidate_client_email?: string;
     search_results?: Array<{
       id: string;
       kind: 'facture' | 'devis';
@@ -220,6 +222,57 @@ export default async function ConfirmPage({ params }: PageProps) {
                 to={ent.reminder_to}
                 subject={ent.reminder_subject ?? ''}
                 body={ent.reminder_body ?? ''}
+              />
+            ) : (
+              <LowConfidenceActions actionId={id} intent={intent} />
+            )}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ─── send_document ─────────────────────────────────────────
+  if (isSendDoc) {
+    const r = ent.search_results?.[0];
+    return (
+      <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
+        {Header}
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+          <AvaLabel>AVA prépare l&apos;envoi :</AvaLabel>
+          <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
+          {r && (
+            <a
+              href={`/${r.kind === 'facture' ? 'factures' : 'devis'}/${r.id}`}
+              style={{
+                display: 'block', textDecoration: 'none',
+                background: C.paper, border: `1px solid ${C.line}`, borderRadius: 14, padding: '14px 16px',
+              }}
+            >
+              <div style={{ font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+                {r.kind === 'facture' ? 'Facture' : 'Devis'}
+              </div>
+              <div style={{ font: `600 15px/1.3 ${SANS}`, color: C.ink, marginTop: 4 }}>
+                {r.client_name ?? 'Sans client'} — {r.number ?? '(brouillon)'}
+              </div>
+              <div style={{ font: `400 12px/1.3 ${SANS}`, color: C.muted, marginTop: 2, ...TNUM }}>
+                {formatPriceFR(r.amount_ttc)} · émis {r.issue_date}
+              </div>
+            </a>
+          )}
+          <AvaDisclaimer />
+          <div style={{ marginTop: 'auto' }}>
+            {r && ent.candidate_client_email ? (
+              <ReadOnlyActions
+                actionId={id}
+                primaryHref={`/${r.kind === 'facture' ? 'factures' : 'devis'}/${r.id}`}
+                primaryLabel="Ouvrir et envoyer"
+              />
+            ) : r ? (
+              <ReadOnlyActions
+                actionId={id}
+                primaryHref={`/${r.kind === 'facture' ? 'factures' : 'devis'}/${r.id}`}
+                primaryLabel="Ouvrir le document"
               />
             ) : (
               <LowConfidenceActions actionId={id} intent={intent} />

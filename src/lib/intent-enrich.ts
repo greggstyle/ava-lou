@@ -18,6 +18,7 @@ export type EnrichedEntities = IntentEntities & {
   candidate_invoice_number?: string;
   candidate_invoice_amount?: number;
   candidate_client_name?: string;
+  candidate_client_email?: string;
   summary?: {
     unpaid_total: number;
     unpaid_count: number;
@@ -320,6 +321,82 @@ export async function enrichForSendReminder(
     ? `Relance prête pour ${client.name} (${formatPriceFR(total)} sur ${candidates.length} facture${candidates.length > 1 ? 's' : ''}). Vérifiez le message et envoyez.`
     : `Relance préparée pour ${client.name}, mais l'email du client manque. Ajoutez-le dans la fiche client puis renvoyez.`;
   return { entities, ava_response: ava_text };
+}
+
+export async function enrichForSendDocument(
+  supabase: SupabaseClient,
+  userId: string,
+  result: IntentResult,
+): Promise<EnrichResult> {
+  const entities: EnrichedEntities = { ...result.entities };
+  if (!entities.client_name) {
+    return {
+      entities,
+      ava_response: "Quel client doit recevoir le document ? Précisez son nom.",
+    };
+  }
+  const client = await findClientByName(supabase, userId, entities.client_name);
+  if (!client) {
+    return {
+      entities,
+      ava_response: `Je ne trouve pas « ${entities.client_name} ».`,
+    };
+  }
+
+  // Find the most recent finalized invoice or quote for this client
+  const [{ data: invs }, { data: qs }] = await Promise.all([
+    supabase
+      .from('invoices')
+      .select('id, number, amount_ttc, issue_date, status')
+      .eq('user_id', userId)
+      .eq('client_id', client.id)
+      .order('issue_date', { ascending: false })
+      .limit(1),
+    supabase
+      .from('quotes')
+      .select('id, number, amount_ttc, issue_date, status')
+      .eq('user_id', userId)
+      .eq('client_id', client.id)
+      .order('issue_date', { ascending: false })
+      .limit(1),
+  ]);
+
+  const inv = invs?.[0];
+  const q = qs?.[0];
+  // Prefer most recent issue_date
+  const candidate = inv && q
+    ? (inv.issue_date >= q.issue_date ? { ...inv, kind: 'facture' as const } : { ...q, kind: 'devis' as const })
+    : inv
+      ? { ...inv, kind: 'facture' as const }
+      : q
+        ? { ...q, kind: 'devis' as const }
+        : null;
+
+  if (!candidate) {
+    return {
+      entities: { ...entities, candidate_client_name: client.name },
+      ava_response: `${client.name} n'a aucun document à envoyer. Créez d'abord une facture ou un devis.`,
+    };
+  }
+
+  entities.candidate_client_name = client.name;
+  entities.candidate_client_email = client.email ?? undefined;
+  entities.search_results = [{
+    id: candidate.id,
+    kind: candidate.kind,
+    number: candidate.number,
+    client_name: client.name,
+    amount_ttc: Number(candidate.amount_ttc),
+    issue_date: candidate.issue_date,
+    status: candidate.status,
+  }];
+
+  const docLabel = candidate.kind === 'facture' ? 'facture' : 'devis';
+  const ava_response = client.email
+    ? `J'envoie la ${docLabel} ${candidate.number ?? '(brouillon)'} à ${client.name} (${client.email}) ?`
+    : `${docLabel} ${candidate.number ?? '(brouillon)'} prête, mais ${client.name} n'a pas d'email — ajoutez-en un dans la fiche client.`;
+
+  return { entities, ava_response };
 }
 
 export async function enrichForFindDocument(
