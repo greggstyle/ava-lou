@@ -1,94 +1,111 @@
-# 🌅 Briefing matinal — AVA-Lou V0.5
+# 🌅 Briefing matinal — AVA-Lou V0.7
 
 **Production en ligne** : https://ava-lou.vercel.app
+**Native** : `ios/` + `android/` projets prêts (voir NATIVE.md)
 
-## ✅ Ce qui a été livré cette nuit
+---
 
-### Fondations (Wave 0–1)
-- Repo GitHub `greggstyle/ava-lou` poussé
-- Vercel projet `ava-lou` lié, env vars en place (Supabase + OpenAI + Anthropic)
-- Schéma Supabase migré (5 tables + RLS + trigger auto-profile)
-- Design system Onde porté en TSX (12 primitives)
-- Fonts Instrument Serif + Inter Tight self-hosted
+## ✅ Livrables de la nuit
 
-### Features V0 (Wave 2)
-- Auth magic link
-- CRUD complet : Clients, Factures, Devis (numérotation auto FAC-2026-XXX)
-- Dashboard avec KPIs trésorerie
-- Paramètres (profil, TVA défaut, DROM, déconnexion)
-- Flux vocal complet : `/listen` → Whisper → Claude → `/confirm/[id]` → CRUD
-- PWA installable (manifest + icônes)
+### Wave 1 — fix de la boucle vocale + UX
+- Loop "Réessayer" cassé → bouton "Continuer en formulaire" qui pré-remplit
+- Préremplissage `?action=ID` dans `/factures/nouvelle` et `/devis/nouveau`
+- Prompt Claude assoupli (philosophie brouillon-d'abord, confidence ≥ 0.65)
+- Mic flottant global sur toutes les pages (route `/listen?return=path`)
+- Seed 3 clients démo (M. Payet, Mme Hoarau, M. Técher)
+- Bouton "Envoyer par email" (mailto: deep-link CdC §7.2)
+- Templates emails Onde
 
-### Fixes V0.5 (cette nuit après votre retour)
-- **Loop "Réessayer" cassé** : sur faible confiance, bouton "Continuer en formulaire" route vers `/factures/nouvelle?action=ID` ou `/devis/nouveau?action=ID` avec préremplissage
-- **Préremplissage** : client matché par nom OU bouton "Créer maintenant" si nouveau, line items, TVA, dates, notes
-- **Prompt Claude assoupli** : "brouillon d'abord" — ne refuse plus jamais une facture/devis pour info manquante. Crée un brouillon avec ce qui est dit, complète "Prestation qty=1" si rien d'autre.
-- **Confidence threshold** : 0.75 → 0.5
-- **Mic flottant global** : sur toutes les pages (sauf listen/confirm/login), tap → `/listen?return=path` → revient à la page courante avec le formulaire prérempli
-- **Seed 3 clients démo** : M. Payet, Mme Hoarau, M. Técher (DROM-aware) — auto-créés au premier login si tables vides
-- **Bouton "Envoyer par email"** sur les détails facture/devis : ouvre `mailto:` avec corps formaté complet (lignes, totaux, échéance, mentions). Status passe à `envoyée`/`envoyé` au clic. Mailto deep-link aligné CdC §7.2.
-- **Templates emails Onde** dans `supabase/email-templates/` (magic-link.html + confirm-signup.html)
+### Wave 2 (cette nuit après votre coucher)
+- **Capacitor iOS + Android** : projets natifs prêts, manifests permissions micro, splash navy, NATIVE.md
+- **P0 audit fixes** : idempotency atomic claim, TVA DROM par défaut, mic tap-to-start, escape hatch toujours visible, VAT 5,5% ajouté
+- **Mentions légales françaises** : composant `<LegalMentions />` sur factures + devis (art. L441-9 + R441-3 + D441-5)
+- **SIRET autocomplete** : recherche-entreprises.api.gouv.fr → auto-remplit denomination, adresse, NAF, forme juridique sur Settings + Fiche client
+- **Email body legal** : mailto inclut bloc mentions légales
 
-## 👉 ACTIONS DE VOTRE CÔTÉ AU RÉVEIL
+---
 
-### 1. Supabase : URL Configuration (BLOQUANT)
-Sans ça les magic links redirigent vers `localhost`.
+## 👉 ACTIONS À FAIRE AU RÉVEIL (15 min)
 
-→ https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/auth/url-configuration
-
-- **Site URL** : `https://ava-lou.vercel.app`
-- **Redirect URLs** : ajouter
-  - `https://ava-lou.vercel.app/auth/callback`
-  - `https://ava-lou.vercel.app/**`
-  - `http://localhost:3000/auth/callback`
+### 1️⃣ Supabase URL Configuration (BLOQUANT pour magic link)
+https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/auth/url-configuration
+- **Site URL** = `https://ava-lou.vercel.app`
+- **Redirect URLs** : ajouter `https://ava-lou.vercel.app/auth/callback`, `https://ava-lou.vercel.app/**`
 - **Save**
 
-### 2. Supabase : Email Templates
-→ https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/auth/templates
+### 2️⃣ Email templates Onde
+https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/auth/templates
+- Magic Link : Subject `Votre lien de connexion AVA` + corps de `supabase/email-templates/magic-link.html`
+- Confirm signup : Subject `Confirmez votre inscription AVA` + corps de `supabase/email-templates/confirm-signup.html`
 
-- **Magic Link** : Subject = `Votre lien de connexion AVA` + coller `supabase/email-templates/magic-link.html`
-- **Confirm signup** : Subject = `Confirmez votre inscription AVA` + coller `supabase/email-templates/confirm-signup.html`
+### 3️⃣ Migration 0003 (BLOQUANT pour idempotency, mentions légales, SIRET)
+https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/sql/new
+Coller le contenu de `supabase/migrations/0003_idempotency_and_legal.sql` puis **Run**.
 
-### 3. Test du flux complet
-1. Ouvrir https://ava-lou.vercel.app/login sur votre iPhone
-2. Email → magic link → `/auth/callback` → home AVA
-3. Vous devriez voir 3 clients démo et le greeting "Bonjour Lou"
-4. Tap sur un client → fiche complète
-5. Tap mic flottant en bas à droite → /listen
-6. Dire « Facture pour M. Payet, 3 heures de plomberie à 55 € TVA 8,5 % »
-7. Vous arrivez sur `/confirm/[id]` avec la reformulation AVA + total
-8. "Confirmer et créer" → la facture est créée → page de succès
-9. Sur la page facture détail : "Envoyer par email" → ouvre Mail/Gmail avec corps prérempli → vous appuyez sur Envoyer
+Sans ça, **les nouvelles features ne fonctionnent pas** (champs base inexistants, double-tap crée 2 factures, numéros peuvent collisionner).
 
-### 4. Stretch goal : Gmail OAuth réel
-La V0.5 utilise `mailto:` (CdC §7.2 deep-link). Pour passer à Gmail OAuth réel (envoi automatique sans intervention) :
-- Créer un projet Google Cloud Console
-- Activer Gmail API
-- OAuth client ID/secret
-- Ajouter les credentials en env Vercel
-- Implémenter le flow OAuth + storage des tokens dans `connected_services`
-- ~3-4h de dev
+---
 
-Je peux faire ça en V1 quand vous aurez le projet Google Cloud créé.
+## 🧪 Plan de test (30 min)
 
-## 🐛 Connus / non-bloquants
+### Test web (https://ava-lou.vercel.app sur iPhone Safari)
+1. Login → magic link → home avec greeting "Bonjour Lou" + 3 clients seedés
+2. **Settings** : remplir SIRET (testez avec `80300010800010` ou un vrai SIRET) → cliquer "Vérifier" → vérifier que `denomination`, `adresse`, `NAF`, `forme juridique` se pré-remplissent. Cocher DROM si applicable.
+3. **Nouveau client pro** : `/clients/nouveau` → cocher "Client professionnel" → SIRET → "Rechercher" → vérifier auto-fill
+4. **Test vocal** : tap mic FAB → page `/listen` doit afficher "Touchez pour parler" (pas démarrage auto) → "Démarrer" → dire « Facture pour M. Payet, 3 heures à 55 € TVA 8,5 % » → confirmer
+5. **Test idempotency** : sur l'écran de confirmation, double-tap rapide sur "Confirmer et créer" — doit créer **une seule** facture (pas deux)
+6. **Test escape hatch** : dire « Salut Mme Hoarau » → doit montrer "Continuer en facture" + "Continuer en devis" + "Réessayer en vocal" (plus de loop)
+7. **Test mentions légales** : ouvrir une facture créée → bloc "Document — Mentions légales" doit afficher vendeur + acheteur + détail TVA + pénalités retard
+8. **Test envoi email** : "Envoyer par email" → ouvre Mail.app/Gmail avec sujet `Facture FAC-2026-XXX` + corps complet incluant mentions légales + signature AVA
 
-- Les nouvelles factures sans client sont permises (dropdown "— Sans client —"). C'est un choix de souplesse.
-- Le bouton "Modifier" sur le confirm bas-confiance ne pré-remplit pas via query string s'il route vers `/factures/nouvelle` simple — la version `?action=ID` est utilisée.
-- Pas de PDF en V0 — uniquement texte mailto. PDF arrive en V1 (Puppeteer ou @react-pdf/renderer).
-- Le seed 3 clients est idempotent : si vous supprimez tout, il se ré-active. Pour figer : ajouter `profiles.demo_seeded boolean` (migration future).
+### Test native iOS (10 min, Apple ID gratuit suffit)
+1. Connecter iPhone en USB
+2. Dans terminal : `pnpm cap:open:ios`
+3. Xcode → "AVA" → choisir votre iPhone en target
+4. Signing & Capabilities → Team → votre Apple ID personnel
+5. Cmd+R → l'app installée sur l'iPhone, ouvre AVA
+6. iPhone : Réglages → Général → VPN/gestion appareil → Faire confiance au certificat
+7. Tester le micro depuis l'app native (devrait pop le permission iOS la 1ère fois)
 
-## 📂 Fichiers clés
+⚠️ Apple ID gratuit : l'app expire dans **7 jours**. Apple Developer ($99/an) pour TestFlight.
 
-- `src/components/ava/index.tsx` — primitives
-- `src/components/mic-fab.tsx` — bouton mic global
-- `src/components/listen-ui.tsx` — flux d'enregistrement
-- `src/components/confirm-actions.tsx` — actions sur l'écran confirmation
-- `src/lib/claude.ts` — system prompt + extraction d'intent
-- `src/lib/whisper.ts` — wrapper transcription
-- `src/app/page.tsx` — home (avec auto-seed)
-- `src/app/api/intent/route.ts` — route Claude
-- `src/app/api/actions/[id]/confirm/route.ts` — exécution intent
-- `supabase/migrations/0001_init.sql` — schéma
+### Test native Android (10 min, gratuit)
+1. Connecter téléphone Android avec Mode développeur + USB Debugging activés
+2. `pnpm cap:open:android`
+3. Run (Shift+F10) sur le téléphone
+4. Tester le micro
 
-Bon café ☕
+---
+
+## 🐛 Connus / non-bloquants V0.7
+
+- **Pas de PDF facture** : seulement HTML + mailto. Puppeteer en V1.
+- **Recherche client** : pas de barre de recherche dans les listes. Avec 3-5 clients OK, à ajouter dès que le volume monte.
+- **Optimistic UI statut** : 300-800 ms de flicker quand on change brouillon→envoyée. Pas bloquant.
+- **`tutoiement` toggle** : écrit en base mais n'affecte aucun label en V0. À câbler en V1.
+- **Notes contiennent la dictée brute** : si vous dictez une facture, "Notes : Dictée vocale : « ... »" finit dans le mailto. Modifiez à la main avant d'envoyer.
+- **Pas de validation Luhn SIRET** : l'API Sirene tranche.
+- **Audio Whisper retention OpenAI** : non-conformité CdC (30j chez OpenAI). Activer ZDR sur le compte OpenAI org si production.
+
+---
+
+## 🔁 Si vous voulez itérer ensemble à 7h
+
+Priorité 1 : **vrai test mobile** (Capacitor sur votre iPhone) — c'est le risque #1.
+Priorité 2 : **affiner le prompt Claude** sur 5-10 dictations réelles (avec un vrai timbre de voix DROM)
+Priorité 3 : **PDF generation** si Lou demande (Puppeteer ou react-pdf, 2h)
+Priorité 4 : **Gmail OAuth** pour envoi automatique (3-4h, nécessite Google Cloud Console)
+
+---
+
+## 📂 Documents à votre disposition
+
+- `MORNING.md` (ce fichier) — actions du matin
+- `MORNING-AUDIT.md` — audit DX nuit avec ~80 findings (P0/P1/P2)
+- `MIGRATIONS-TODO.md` — migrations Supabase à appliquer
+- `LEGAL.md` — conformité française art. L441-9 + roadmap factur-X 2026/2027
+- `SIRENE.md` — API contract data.gouv autocomplete
+- `NATIVE.md` — Capacitor iOS + Android (build, sign, TestFlight, Play Console)
+- `README.md` — overview tech général
+
+Bon café et bons tests ☕
