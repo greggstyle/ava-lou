@@ -274,6 +274,30 @@ export function ListenUi() {
             <AvaButton kind="validate" onClick={() => void startRecording()} style={{ minWidth: 240 }}>
               Démarrer
             </AvaButton>
+            <div
+              style={{
+                marginTop: 4,
+                padding: '14px 16px',
+                background: 'rgba(255,255,255,0.06)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 14,
+                color: 'rgba(255,255,255,0.9)',
+                font: `400 13px/1.55 ${SANS}`,
+                maxWidth: 320,
+                textAlign: 'left',
+              }}
+            >
+              <div style={{ font: `500 11px/1 ${SANS}`, color: 'rgba(255,255,255,0.55)', textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 8 }}>
+                Exemples
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« Facture pour M. Payet, 3 heures à 55 € »</div>
+                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« Devis Mme Hoarau, pose carrelage 25 m² à 45 € »</div>
+                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« M. Payet a payé »</div>
+                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« Qu&apos;est-ce qui rentre cette semaine ? »</div>
+                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« Relance Mme Hoarau »</div>
+              </div>
+            </div>
             <div style={{
               marginTop: 8, padding: '10px 14px',
               background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',

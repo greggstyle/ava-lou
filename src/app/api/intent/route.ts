@@ -7,6 +7,7 @@ import {
   enrichForFinancialStatus,
   enrichForSendReminder,
   enrichForInvoiceList,
+  enrichForFindDocument,
 } from '@/lib/intent-enrich';
 
 export const runtime = 'nodejs';
@@ -77,6 +78,10 @@ export async function POST(req: Request) {
         ava_response = enriched.ava_response;
       } else if (result.intent === 'get_invoice_list') {
         const enriched = await enrichForInvoiceList(result);
+        entities = enriched.entities;
+        ava_response = enriched.ava_response;
+      } else if (result.intent === 'find_document') {
+        const enriched = await enrichForFindDocument(supabase, user.id, result);
         entities = enriched.entities;
         ava_response = enriched.ava_response;
       }

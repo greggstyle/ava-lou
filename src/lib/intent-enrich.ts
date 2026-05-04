@@ -32,6 +32,15 @@ export type EnrichedEntities = IntentEntities & {
   reminder_to?: string;
   candidate_invoices?: Array<{ number: string | null; amount_ttc: number; due_date: string | null }>;
   list_filter?: string;
+  search_results?: Array<{
+    id: string;
+    kind: 'facture' | 'devis';
+    number: string | null;
+    client_name: string | null;
+    amount_ttc: number;
+    issue_date: string;
+    status: string;
+  }>;
 };
 
 interface EnrichResult {
@@ -311,6 +320,91 @@ export async function enrichForSendReminder(
     ? `Relance prête pour ${client.name} (${formatPriceFR(total)} sur ${candidates.length} facture${candidates.length > 1 ? 's' : ''}). Vérifiez le message et envoyez.`
     : `Relance préparée pour ${client.name}, mais l'email du client manque. Ajoutez-le dans la fiche client puis renvoyez.`;
   return { entities, ava_response: ava_text };
+}
+
+export async function enrichForFindDocument(
+  supabase: SupabaseClient,
+  userId: string,
+  result: IntentResult,
+): Promise<EnrichResult> {
+  const entities: EnrichedEntities = { ...result.entities };
+  const queryParts: string[] = [];
+
+  // Build query: client_name + month/period from raw text
+  let clientId: string | null = null;
+  if (entities.client_name) {
+    const c = await findClientByName(supabase, userId, entities.client_name);
+    if (c) {
+      clientId = c.id;
+      queryParts.push(c.name);
+    }
+  }
+
+  // Search both invoices and quotes
+  let invoicesQ = supabase
+    .from('invoices')
+    .select('id, number, amount_ttc, issue_date, status, clients(name)')
+    .eq('user_id', userId)
+    .order('issue_date', { ascending: false })
+    .limit(10);
+  let quotesQ = supabase
+    .from('quotes')
+    .select('id, number, amount_ttc, issue_date, status, clients(name)')
+    .eq('user_id', userId)
+    .order('issue_date', { ascending: false })
+    .limit(10);
+
+  if (clientId) {
+    invoicesQ = invoicesQ.eq('client_id', clientId);
+    quotesQ = quotesQ.eq('client_id', clientId);
+  }
+
+  const [{ data: invs }, { data: qs }] = await Promise.all([invoicesQ, quotesQ]);
+
+  type WithClient = { id: string; number: string | null; amount_ttc: number; issue_date: string; status: string; clients: { name: string } | { name: string }[] | null };
+  const pickName = (c: WithClient['clients']): string | null => {
+    if (!c) return null;
+    if (Array.isArray(c)) return c[0]?.name ?? null;
+    return c.name ?? null;
+  };
+
+  const results: NonNullable<EnrichedEntities['search_results']> = [];
+  for (const i of (invs ?? []) as WithClient[]) {
+    results.push({
+      id: i.id,
+      kind: 'facture',
+      number: i.number,
+      client_name: pickName(i.clients),
+      amount_ttc: Number(i.amount_ttc),
+      issue_date: i.issue_date,
+      status: i.status,
+    });
+  }
+  for (const q of (qs ?? []) as WithClient[]) {
+    results.push({
+      id: q.id,
+      kind: 'devis',
+      number: q.number,
+      client_name: pickName(q.clients),
+      amount_ttc: Number(q.amount_ttc),
+      issue_date: q.issue_date,
+      status: q.status,
+    });
+  }
+  results.sort((a, b) => b.issue_date.localeCompare(a.issue_date));
+  entities.search_results = results.slice(0, 12);
+
+  let ava_response = '';
+  if (results.length === 0) {
+    ava_response = queryParts.length > 0
+      ? `Aucun document trouvé pour ${queryParts.join(', ')}.`
+      : "Aucun document à montrer pour cette recherche.";
+  } else {
+    const filterDesc = queryParts.length > 0 ? ` pour ${queryParts.join(', ')}` : '';
+    ava_response = `${results.length} document${results.length > 1 ? 's' : ''} trouvé${results.length > 1 ? 's' : ''}${filterDesc}.`;
+  }
+
+  return { entities, ava_response };
 }
 
 export async function enrichForInvoiceList(

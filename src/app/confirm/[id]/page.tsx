@@ -58,6 +58,7 @@ export default async function ConfirmPage({ params }: PageProps) {
   const isFinancialStatus = intent === 'get_financial_status';
   const isReminder = intent === 'send_reminder';
   const isInvoiceList = intent === 'get_invoice_list';
+  const isFind = intent === 'find_document';
 
   type EnrichedEntities = Partial<IntentEntities> & {
     candidate_invoice_id?: string;
@@ -77,6 +78,15 @@ export default async function ConfirmPage({ params }: PageProps) {
     reminder_body?: string;
     reminder_to?: string;
     list_filter?: string;
+    search_results?: Array<{
+      id: string;
+      kind: 'facture' | 'devis';
+      number: string | null;
+      client_name: string | null;
+      amount_ttc: number;
+      issue_date: string;
+      status: string;
+    }>;
   };
   const ent = entities as EnrichedEntities;
 
@@ -214,6 +224,55 @@ export default async function ConfirmPage({ params }: PageProps) {
             ) : (
               <LowConfidenceActions actionId={id} intent={intent} />
             )}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ─── find_document ─────────────────────────────────────────
+  if (isFind) {
+    const results = ent.search_results ?? [];
+    return (
+      <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
+        {Header}
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+          <AvaLabel>AVA a trouvé :</AvaLabel>
+          <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
+          {results.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {results.map((r) => (
+                <a
+                  key={r.id}
+                  href={`/${r.kind === 'facture' ? 'factures' : 'devis'}/${r.id}`}
+                  style={{
+                    display: 'block', textDecoration: 'none',
+                    background: C.paper, border: `1px solid ${C.line}`, borderRadius: 14,
+                    padding: '14px 16px',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+                        {r.kind === 'facture' ? 'Facture' : 'Devis'} · {r.status}
+                      </div>
+                      <div style={{ font: `600 15px/1.3 ${SANS}`, color: C.ink, marginTop: 4 }}>
+                        {r.client_name ?? 'Sans client'}
+                      </div>
+                      <div style={{ font: `400 12px/1.3 ${SANS}`, color: C.muted, marginTop: 2, ...TNUM }}>
+                        {r.number ?? '(brouillon)'} · {r.issue_date}
+                      </div>
+                    </div>
+                    <div style={{ font: `600 16px/1 ${SERIF}`, color: C.ink, ...TNUM, whiteSpace: 'nowrap' }}>
+                      {formatPriceFR(r.amount_ttc)}
+                    </div>
+                  </div>
+                </a>
+              ))}
+            </div>
+          ) : null}
+          <div style={{ marginTop: 'auto' }}>
+            <ReadOnlyActions actionId={id} primaryHref="/" primaryLabel="Retour à l'accueil" />
           </div>
         </div>
       </main>
