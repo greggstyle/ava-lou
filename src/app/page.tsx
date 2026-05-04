@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { HomeMicDock } from '@/components/home-mic-dock';
 import { AvaTopBar, AvaCard, AvaLabel, AvaListRow, AvaButton, C, SERIF, SANS } from '@/components/ava';
 import { formatPriceFR, formatDateRelativeFR } from '@/lib/format';
+import { NotificationsBanner } from '@/components/notifications-banner';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,14 @@ export default async function HomePage() {
     .limit(1)
     .maybeSingle();
 
+  // Unread proactive notifications (cron weekly recap, etc.)
+  const { data: notifications } = await supabase
+    .from('notifications')
+    .select('id, type, title, body, action_url, created_at')
+    .eq('is_dismissed', false)
+    .order('created_at', { ascending: false })
+    .limit(5);
+
   return (
     <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AvaTopBar
@@ -80,6 +89,10 @@ export default async function HomePage() {
         >
           Qu&apos;est-ce qu&apos;on règle <em style={{ fontStyle: 'italic' }}>aujourd&apos;hui</em> ?
         </h1>
+
+        {notifications && notifications.length > 0 && (
+          <NotificationsBanner initial={notifications} />
+        )}
 
         {openSuggestion && (
           <div style={{ marginTop: 24 }}>
