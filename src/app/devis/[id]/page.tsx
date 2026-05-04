@@ -6,7 +6,8 @@ import { Plus, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { AvaTopBar, AvaCard, AvaField, AvaButton, AvaDisclaimer, AvaLabel, AvaPill, C, SANS, SERIF, TNUM } from '@/components/ava';
 import { computeTotals, formatPriceFR, formatDateFR } from '@/lib/format';
-import type { Quote, QuoteStatus, LineItem } from '@/lib/types';
+import type { Quote, QuoteStatus, LineItem, Profile, Client } from '@/lib/types';
+import { LegalMentions } from '@/components/legal-mentions';
 
 const inputStyle: React.CSSProperties = {
   background: C.paper,
@@ -22,7 +23,12 @@ const inputStyle: React.CSSProperties = {
 const STATUSES: QuoteStatus[] = ['brouillon', 'envoyé', 'accepté', 'refusé', 'expiré'];
 
 interface QuoteWithClient extends Quote {
-  clients: { name: string; email: string | null } | null;
+  clients:
+    | (Pick<
+        Client,
+        'id' | 'name' | 'email' | 'company_name' | 'siret' | 'vat_intra' | 'address' | 'postal_code' | 'city' | 'is_business'
+      > & { name: string; email: string | null })
+    | null;
 }
 
 interface LineRow {
@@ -37,6 +43,7 @@ export default function DevisDetailPage() {
   const id = params.id;
 
   const [quote, setQuote] = React.useState<QuoteWithClient | null>(null);
+  const [profile, setProfile] = React.useState<Partial<Profile> | null>(null);
   const [clients, setClients] = React.useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [editing, setEditing] = React.useState(false);
@@ -55,11 +62,17 @@ export default function DevisDetailPage() {
     let cancelled = false;
     async function load() {
       const supabase = createClient();
-      const [{ data }, { data: cs }] = await Promise.all([
-        supabase.from('quotes').select('*, clients(name, email)').eq('id', id).maybeSingle(),
+      const [{ data }, { data: cs }, { data: prof }] = await Promise.all([
+        supabase
+          .from('quotes')
+          .select('*, clients(id, name, email, company_name, siret, vat_intra, address, postal_code, city, is_business)')
+          .eq('id', id)
+          .maybeSingle(),
         supabase.from('clients').select('id, name').order('name'),
+        supabase.from('profiles').select('*').maybeSingle(),
       ]);
       if (cancelled) return;
+      if (prof) setProfile(prof as Partial<Profile>);
       if (data) {
         const q = data as QuoteWithClient;
         setQuote(q);
@@ -98,7 +111,11 @@ export default function DevisDetailPage() {
 
   async function reload() {
     const supabase = createClient();
-    const { data } = await supabase.from('quotes').select('*, clients(name, email)').eq('id', id).maybeSingle();
+    const { data } = await supabase
+      .from('quotes')
+      .select('*, clients(id, name, email, company_name, siret, vat_intra, address, postal_code, city, is_business)')
+      .eq('id', id)
+      .maybeSingle();
     if (data) setQuote(data as QuoteWithClient);
   }
 
@@ -336,6 +353,8 @@ export default function DevisDetailPage() {
                 </div>
               </AvaCard>
             )}
+
+            <LegalMentions profile={profile} client={quote.clients} doc={quote} kind="devis" />
 
             <div style={{ marginTop: 18 }}>
               <AvaLabel style={{ marginBottom: 8 }}>Statut</AvaLabel>

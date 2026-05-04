@@ -6,7 +6,8 @@ import { Plus, X } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { AvaTopBar, AvaCard, AvaField, AvaButton, AvaDisclaimer, AvaLabel, AvaPill, C, SANS, SERIF, TNUM } from '@/components/ava';
 import { computeTotals, formatPriceFR, formatDateFR } from '@/lib/format';
-import type { Invoice, InvoiceStatus, LineItem } from '@/lib/types';
+import type { Invoice, InvoiceStatus, LineItem, Profile, Client } from '@/lib/types';
+import { LegalMentions } from '@/components/legal-mentions';
 
 const inputStyle: React.CSSProperties = {
   background: C.paper,
@@ -22,7 +23,12 @@ const inputStyle: React.CSSProperties = {
 const STATUSES: InvoiceStatus[] = ['brouillon', 'envoyée', 'payée', 'en_retard'];
 
 interface InvoiceWithClient extends Invoice {
-  clients: { name: string; email: string | null } | null;
+  clients:
+    | (Pick<
+        Client,
+        'id' | 'name' | 'email' | 'company_name' | 'siret' | 'vat_intra' | 'address' | 'postal_code' | 'city' | 'is_business'
+      > & { name: string; email: string | null })
+    | null;
 }
 
 interface LineRow {
@@ -37,6 +43,7 @@ export default function FactureDetailPage() {
   const id = params.id;
 
   const [invoice, setInvoice] = React.useState<InvoiceWithClient | null>(null);
+  const [profile, setProfile] = React.useState<Partial<Profile> | null>(null);
   const [clients, setClients] = React.useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [editing, setEditing] = React.useState(false);
@@ -54,11 +61,17 @@ export default function FactureDetailPage() {
     let cancelled = false;
     async function load() {
       const supabase = createClient();
-      const [{ data }, { data: cs }] = await Promise.all([
-        supabase.from('invoices').select('*, clients(name, email)').eq('id', id).maybeSingle(),
+      const [{ data }, { data: cs }, { data: prof }] = await Promise.all([
+        supabase
+          .from('invoices')
+          .select('*, clients(id, name, email, company_name, siret, vat_intra, address, postal_code, city, is_business)')
+          .eq('id', id)
+          .maybeSingle(),
         supabase.from('clients').select('id, name').order('name'),
+        supabase.from('profiles').select('*').maybeSingle(),
       ]);
       if (cancelled) return;
+      if (prof) setProfile(prof as Partial<Profile>);
       if (data) {
         const inv = data as InvoiceWithClient;
         setInvoice(inv);
@@ -97,7 +110,11 @@ export default function FactureDetailPage() {
 
   async function reload() {
     const supabase = createClient();
-    const { data } = await supabase.from('invoices').select('*, clients(name, email)').eq('id', id).maybeSingle();
+    const { data } = await supabase
+      .from('invoices')
+      .select('*, clients(id, name, email, company_name, siret, vat_intra, address, postal_code, city, is_business)')
+      .eq('id', id)
+      .maybeSingle();
     if (data) setInvoice(data as InvoiceWithClient);
   }
 
@@ -316,6 +333,8 @@ export default function FactureDetailPage() {
                 </div>
               </AvaCard>
             )}
+
+            <LegalMentions profile={profile} client={invoice.clients} doc={invoice} kind="facture" />
 
             <div style={{ marginTop: 18 }}>
               <AvaLabel style={{ marginBottom: 8 }}>Statut</AvaLabel>

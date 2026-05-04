@@ -7,7 +7,13 @@ const ClientCreateSchema = z.object({
   email: z.string().email('Email invalide').optional().nullable().or(z.literal('')),
   phone: z.string().optional().nullable().or(z.literal('')),
   address: z.string().optional().nullable().or(z.literal('')),
+  postal_code: z.string().optional().nullable().or(z.literal('')),
+  city: z.string().optional().nullable().or(z.literal('')),
   notes: z.string().optional().nullable().or(z.literal('')),
+  is_business: z.boolean().optional(),
+  company_name: z.string().optional().nullable().or(z.literal('')),
+  siret: z.string().optional().nullable().or(z.literal('')),
+  vat_intra: z.string().optional().nullable().or(z.literal('')),
 });
 
 function emptyToNull<T extends string | null | undefined>(v: T): T | null {
@@ -53,7 +59,13 @@ export async function POST(request: Request) {
     email: emptyToNull(parsed.data.email ?? null),
     phone: emptyToNull(parsed.data.phone ?? null),
     address: emptyToNull(parsed.data.address ?? null),
+    postal_code: emptyToNull(parsed.data.postal_code ?? null),
+    city: emptyToNull(parsed.data.city ?? null),
     notes: emptyToNull(parsed.data.notes ?? null),
+    is_business: parsed.data.is_business ?? false,
+    company_name: emptyToNull(parsed.data.company_name ?? null),
+    siret: emptyToNull(parsed.data.siret ?? null),
+    vat_intra: emptyToNull(parsed.data.vat_intra ?? null),
   };
 
   const { data, error } = await supabase

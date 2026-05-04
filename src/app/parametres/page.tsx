@@ -39,6 +39,19 @@ export default async function SettingsPage() {
             vat_default: profile?.vat_default ?? 20,
             is_drom: profile?.is_drom ?? false,
             tutoiement: profile?.tutoiement ?? false,
+            address: profile?.address ?? '',
+            postal_code: profile?.postal_code ?? '',
+            city: profile?.city ?? '',
+            naf_code: profile?.naf_code ?? '',
+            naf_label: profile?.naf_label ?? '',
+            legal_form: (profile?.legal_form as never) ?? '',
+            capital_social: profile?.capital_social != null ? String(profile.capital_social) : '',
+            rcs: profile?.rcs ?? '',
+            vat_intra: profile?.vat_intra ?? '',
+            tva_franchise: profile?.tva_franchise ?? true,
+            late_penalty_rate: profile?.late_penalty_rate != null ? String(profile.late_penalty_rate) : '10.5',
+            payment_terms_days: profile?.payment_terms_days != null ? String(profile.payment_terms_days) : '30',
+            b2c_mediator: profile?.b2c_mediator ?? '',
           }}
         />
       </div>

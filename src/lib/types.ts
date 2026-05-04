@@ -8,6 +8,15 @@ export interface LineItem {
   vat_rate: number;
 }
 
+export type LegalForm =
+  | 'auto-entrepreneur'
+  | 'EI'
+  | 'EURL'
+  | 'SARL'
+  | 'SAS'
+  | 'SASU'
+  | 'autre';
+
 export interface Profile {
   id: string;
   full_name: string | null;
@@ -18,6 +27,22 @@ export interface Profile {
   is_drom: boolean;
   tutoiement: boolean;
   created_at: string;
+
+  // Legal fields (migration 0003) — all optional for V0
+  address: string | null;
+  postal_code: string | null;
+  city: string | null;
+  naf_code: string | null;
+  naf_label: string | null;
+  legal_form: LegalForm | null;
+  capital_social: number | null;
+  rcs: string | null;
+  vat_intra: string | null;
+  tva_franchise: boolean;
+  late_penalty_rate: number;
+  late_penalty_indemnity: number;
+  payment_terms_days: number;
+  b2c_mediator: string | null;
 }
 
 export interface Client {
@@ -29,6 +54,14 @@ export interface Client {
   address: string | null;
   notes: string | null;
   created_at: string;
+
+  // Pro fields (migration 0003)
+  company_name: string | null;
+  siret: string | null;
+  vat_intra: string | null;
+  postal_code: string | null;
+  city: string | null;
+  is_business: boolean;
 }
 
 export interface Invoice {
@@ -102,7 +135,7 @@ export interface AvaAction {
   intent: AvaIntent;
   entities: IntentEntities;
   confidence: number;
-  status: 'pending' | 'confirmed' | 'executed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'executing' | 'executed' | 'cancelled';
   ava_response: string | null;
   target_table: 'invoices' | 'quotes' | 'clients' | null;
   target_id: string | null;
