@@ -21,8 +21,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  // pinch-zoom allowed (WCAG 1.4.4) — the artisan in bright sun needs to zoom prices
   themeColor: '#F4F3EE',
   viewportFit: 'cover',
 };
