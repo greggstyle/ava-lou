@@ -36,6 +36,7 @@ RÈGLES — PHILOSOPHIE "BROUILLON D'ABORD" :
 2. Si l'artisan dit clairement "facture" ou "devis", l'intent est défini : confidence ≥ 0.65 dès qu'on a au moins UN élément (client OU prestation OU montant). N'exige PAS toutes les infos.
 3. Quand un montant est donné sans détail ("facture 500 € pour M. Payet"), crée une seule line_item label="Prestation" qty=1 unit_price=montant. C'est un brouillon, pas un acte définitif.
 4. Quand des heures sont données ("3h à 55€"), calcule line_item qty=3 unit_price=55 label="Main d'œuvre".
+4.bis. **MULTI-PRESTATIONS** : si la phrase contient "plus", "puis", "et aussi", "et", "et", "ensuite", "+", "ainsi que" séparant plusieurs prestations, retourne UNE LIGNE PAR PRESTATION dans line_items. Ex : "facture pour Payet, 3 heures plomberie 55 €, plus pose carrelage 200 €" → line_items = [{label:"Plomberie",qty:3,unit_price:55,vat_rate:8.5}, {label:"Pose carrelage",qty:1,unit_price:200,vat_rate:8.5}]. Reconnais les séparateurs même implicites (virgule + nouvelle prestation).
 5. Ne JAMAIS inventer un nom, un email, ou une date non mentionnée → mettre null. Mais NE refuse PAS la création pour autant.
 6. TVA par défaut prioritaire : si is_drom=true dans le contexte → TVA 8,5%. Sinon TVA 20%. Sauf si artisan dit explicitement "TVA 10%" / "TVA 5,5%" / "auto-entrepreneur" (TVA 0) — auquel cas suivre.
 7. Reconnaître les abréviations artisan : MO, dépl, four, mat, RDV, chantier, m² (mètres carrés), ml (mètre linéaire), forfait.
@@ -80,7 +81,13 @@ Phrase : "Donne-moi tes recommandations"
 {"intent":"get_insights","entities":{"client_name":null,"client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.85,"ava_response":"Voici vos conseils stratégiques."}
 
 Phrase : "Envoie le lien de paiement à Monsieur Payet"
-{"intent":"send_payment_link","entities":{"client_name":"M. Payet","client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.9,"ava_response":"Lien de paiement préparé pour M. Payet."}`;
+{"intent":"send_payment_link","entities":{"client_name":"M. Payet","client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.9,"ava_response":"Lien de paiement préparé pour M. Payet."}
+
+Phrase : "Facture pour Madame Hoarau, 3 heures de plomberie à 55 euros plus pose carrelage 200 euros TVA 8,5"
+{"intent":"create_invoice","entities":{"client_name":"Mme Hoarau","client_email":null,"amount_total":null,"line_items":[{"label":"Plomberie","qty":3,"unit_price":55,"vat_rate":8.5},{"label":"Pose carrelage","qty":1,"unit_price":200,"vat_rate":8.5}],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.9,"ava_response":"Facture pour Mme Hoarau : plomberie 165 € + pose carrelage 200 €, TVA 8,5%, total 396,03 € TTC."}
+
+Phrase : "Devis Monsieur Técher, fourniture chaudière 1200 €, pose 400 €, déplacement 80 €"
+{"intent":"create_quote","entities":{"client_name":"M. Técher","client_email":null,"amount_total":null,"line_items":[{"label":"Fourniture chaudière","qty":1,"unit_price":1200,"vat_rate":8.5},{"label":"Pose","qty":1,"unit_price":400,"vat_rate":8.5},{"label":"Déplacement","qty":1,"unit_price":80,"vat_rate":8.5}],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.88,"ava_response":"Devis pour M. Técher : fourniture 1 200 € + pose 400 € + déplacement 80 €, total 1 822,80 € TTC."}`;
 
 export interface ClaudeContext {
   recent_clients?: { name: string; email?: string | null }[];
