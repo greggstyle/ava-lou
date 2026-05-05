@@ -6,6 +6,7 @@ import { AvaTopBar, AvaCard, AvaLabel, AvaListRow, AvaButton, C, SERIF, SANS } f
 import { formatPriceFR, formatDateRelativeFR } from '@/lib/format';
 import { NotificationsBanner } from '@/components/notifications-banner';
 import { OnboardingWizard } from '@/components/onboarding-wizard';
+import { SmartGreeting } from '@/components/smart-greeting';
 import { InstallHint } from '@/components/install-hint';
 
 export const dynamic = 'force-dynamic';
@@ -86,6 +87,43 @@ export default async function HomePage() {
     .order('starts_at', { ascending: true })
     .limit(5);
 
+  // Smart greeting context: aggregate counters for the contextual line
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const weekStartDate = new Date();
+  weekStartDate.setDate(weekStartDate.getDate() - 7);
+  const weekStart = weekStartDate.toISOString().slice(0, 10);
+
+  const [{ data: pendingInvoices }, { data: overdueInvoices }, { data: paidInvoices }, { data: pendingQuotesData }] = await Promise.all([
+    supabase
+      .from('invoices')
+      .select('amount_ttc')
+      .eq('status', 'envoyée')
+      .lte('issue_date', todayIso),
+    supabase
+      .from('invoices')
+      .select('amount_ttc')
+      .eq('status', 'en_retard'),
+    supabase
+      .from('invoices')
+      .select('amount_ttc')
+      .eq('status', 'payée')
+      .gte('issue_date', weekStart),
+    supabase
+      .from('quotes')
+      .select('id')
+      .eq('status', 'envoyé'),
+  ]);
+
+  const sumTtc = (rows: Array<{ amount_ttc: number | string }> | null): number =>
+    (rows ?? []).reduce((s, r) => s + Number(r.amount_ttc), 0);
+
+  const greetingCtx = {
+    invoicesPending: { count: (pendingInvoices ?? []).length, total: sumTtc(pendingInvoices) },
+    invoicesOverdue: { count: (overdueInvoices ?? []).length, total: sumTtc(overdueInvoices) },
+    paidThisWeek: { count: (paidInvoices ?? []).length, total: sumTtc(paidInvoices) },
+    pendingQuotes: (pendingQuotesData ?? []).length,
+  };
+
   // Top unread/undismissed insight (V7 — AVA Conseillère)
   const { data: topInsight } = await supabase
     .from('insights')
@@ -122,6 +160,18 @@ export default async function HomePage() {
         >
           Qu&apos;est-ce qu&apos;on règle <em style={{ fontStyle: 'italic' }}>aujourd&apos;hui</em> ?
         </h1>
+
+        <SmartGreeting
+          greeting={greeting}
+          invoicesPending={greetingCtx.invoicesPending}
+          invoicesOverdue={greetingCtx.invoicesOverdue}
+          paidThisWeek={greetingCtx.paidThisWeek}
+          pendingQuotes={greetingCtx.pendingQuotes}
+          upcomingAppointmentsToday={(upcomingAppointments ?? []).filter((a) => {
+            const d = new Date(a.starts_at);
+            return d.toDateString() === new Date().toDateString();
+          }).length}
+        />
 
         {profileIncomplete && (
           <Link href="/parametres" style={{ textDecoration: 'none' }}>
