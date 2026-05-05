@@ -150,6 +150,7 @@ export type AvaIntent =
   | 'sign_document'
   | 'create_expense_note'
   | 'get_insights'
+  | 'send_payment_link'
   | 'unknown';
 
 export interface IntentEntities {

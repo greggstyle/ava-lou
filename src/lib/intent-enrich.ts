@@ -19,6 +19,16 @@ export type EnrichedEntities = IntentEntities & {
   candidate_invoice_amount?: number;
   candidate_client_name?: string;
   candidate_client_email?: string;
+  payment_link?: {
+    invoice_id: string;
+    invoice_number: string | null;
+    amount_ttc: number;
+    public_url: string;
+    mailto: string;
+    subject: string;
+    body: string;
+    to: string;
+  };
   summary?: {
     unpaid_total: number;
     unpaid_count: number;
@@ -741,4 +751,113 @@ export async function enrichForInvoiceList(
     entities,
     ava_response: `J'ouvre ${label}.`,
   };
+}
+
+/**
+ * Send-payment-link enrichment: finds the most recent unpaid invoice for the
+ * named client and drafts a mailto with the public invoice URL framed as a
+ * one-click payment link. The artisan reviews the draft, then taps "Ouvrir
+ * l'email" — their mail client takes over.
+ *
+ * V13.1+ will swap public_url for a real Stripe payment link once Stripe Connect
+ * is wired (CdC §3.5 V2). For now the public /voir/facture/[id] URL doubles as
+ * a "voir + payer plus tard" landing — the client at least sees the amount, the
+ * IBAN, and the conditions de règlement.
+ */
+export async function enrichForPaymentLink(
+  supabase: SupabaseClient,
+  userId: string,
+  result: IntentResult,
+): Promise<EnrichResult> {
+  const entities: EnrichedEntities = { ...result.entities };
+
+  if (!entities.client_name) {
+    return {
+      entities,
+      ava_response: "Précisez à quel client envoyer le lien (ex: \"envoie le lien de paiement à M. Payet\").",
+    };
+  }
+
+  const client = await findClientByName(supabase, userId, entities.client_name);
+  if (!client) {
+    return {
+      entities,
+      ava_response: `Je ne trouve pas « ${entities.client_name} » dans vos clients.`,
+    };
+  }
+
+  // Most recent unpaid invoice (sent or overdue) for this client
+  const { data: invoices } = await supabase
+    .from('invoices')
+    .select('id, number, amount_ttc, due_date, issue_date, status')
+    .eq('user_id', userId)
+    .eq('client_id', client.id)
+    .in('status', ['envoyée', 'en_retard'])
+    .order('issue_date', { ascending: false })
+    .limit(1);
+
+  const inv = (invoices ?? [])[0] as CandidateInvoice | undefined;
+  if (!inv) {
+    return {
+      entities: { ...entities, candidate_client_name: client.name },
+      ava_response: `${client.name} n'a aucune facture en attente. Rien à envoyer.`,
+    };
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('full_name, company_name')
+    .eq('id', userId)
+    .maybeSingle();
+  const sender = profile?.company_name || profile?.full_name || 'votre prestataire';
+
+  // Public URL — read from env at request time (Vercel sets NEXT_PUBLIC_SITE_URL)
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ava-lou.vercel.app';
+  const publicUrl = `${baseUrl}/voir/facture/${inv.id}`;
+
+  const subject = `Lien de paiement — facture ${inv.number ?? ''}`.trim();
+  const body = [
+    `Bonjour ${client.name},`,
+    '',
+    `Pour vous simplifier le règlement de la facture ${inv.number ?? ''} d'un montant de ${formatPriceFR(Number(inv.amount_ttc))}, voici le lien direct :`,
+    '',
+    publicUrl,
+    '',
+    'Vous y trouverez le détail de la prestation, l\'IBAN pour virement et toutes les mentions obligatoires.',
+    '',
+    inv.due_date ? `Échéance : ${formatDateFR(inv.due_date)}.` : '',
+    '',
+    'Pour toute question, n\'hésitez pas à me répondre directement à cet email.',
+    '',
+    'Bien cordialement,',
+    sender,
+    '',
+    '—',
+    `Envoyé via AVA le ${formatDateFR(new Date())}`,
+  ].filter(Boolean).join('\n');
+
+  const to = client.email ?? '';
+  const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+  entities.payment_link = {
+    invoice_id: inv.id,
+    invoice_number: inv.number ?? null,
+    amount_ttc: Number(inv.amount_ttc),
+    public_url: publicUrl,
+    mailto,
+    subject,
+    body,
+    to,
+  };
+  entities.candidate_client_name = client.name;
+  entities.candidate_client_email = client.email ?? undefined;
+  entities.candidate_invoice_id = inv.id;
+  entities.candidate_invoice_number = inv.number ?? undefined;
+  entities.candidate_invoice_amount = Number(inv.amount_ttc);
+
+  const ava_text = client.email
+    ? `Lien de paiement prêt pour ${client.name} (facture ${inv.number ?? ''} — ${formatPriceFR(Number(inv.amount_ttc))}). Vérifiez puis envoyez.`
+    : `Lien de paiement préparé pour ${client.name} (facture ${inv.number ?? ''} — ${formatPriceFR(Number(inv.amount_ttc))}), mais l'email du client manque. Ajoutez-le dans la fiche client.`;
+
+  return { entities, ava_response: ava_text };
 }

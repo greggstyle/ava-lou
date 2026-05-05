@@ -25,6 +25,7 @@ INTENTIONS RECONNUES :
 - sign_document : demander une signature électronique
 - create_expense_note : enregistrer une dépense / note de frais ("j'ai acheté", "j'ai payé chez", "achat de matériel", "facture fournisseur")
 - get_insights : consulter les conseils stratégiques d'AVA ("qu'est-ce que tu vois", "tes conseils", "tes insights", "qu'est-ce qu'il faut surveiller", "donne-moi des recommandations")
+- send_payment_link : envoyer un lien de paiement à un client pour une facture impayée ("envoie le lien de paiement", "envoie le lien à payer", "lien Stripe", "facilite le paiement", "rends le règlement plus facile")
 - unknown : la phrase ne contient aucun mot-clé identifiable
 
 FORMAT DE RÉPONSE OBLIGATOIRE :
@@ -47,6 +48,7 @@ RÈGLES — PHILOSOPHIE "BROUILLON D'ABORD" :
 14. Pour find_document / send_document : extraire client_name + (optionnellement) une période ou un numéro dans notes. Mots-clés find : "trouve", "cherche", "retrouve". Mots-clés send : "envoie", "envoyer".
 15. Reconnais "vendredi/lundi/mardi prochain" → calculer la date ISO si possible, sinon mettre la mention en notes.
 16. Pour create_expense_note : extraire amount_total (montant), client_name (= fournisseur, ex "Point P", "Leroy Merlin"), line_items[0].label = nature ("matériel", "essence", "outillage"). Mots-clés : "j'ai acheté", "j'ai payé", "achat", "dépense", "frais", "facture fournisseur", "ticket".
+17. Pour send_payment_link : extraire client_name (à qui envoyer le lien), laisser le reste vide. Mots-clés : "lien de paiement", "lien à payer", "lien Stripe", "facilite le paiement", "envoie le lien".
 
 EXEMPLES (tu retournes UNIQUEMENT le JSON, ces exemples sont pour la calibration) :
 
@@ -75,7 +77,10 @@ Phrase : "Qu'est-ce que tu vois cette semaine"
 {"intent":"get_insights","entities":{"client_name":null,"client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.88,"ava_response":"Voici vos conseils stratégiques."}
 
 Phrase : "Donne-moi tes recommandations"
-{"intent":"get_insights","entities":{"client_name":null,"client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.85,"ava_response":"Voici vos conseils stratégiques."}`;
+{"intent":"get_insights","entities":{"client_name":null,"client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.85,"ava_response":"Voici vos conseils stratégiques."}
+
+Phrase : "Envoie le lien de paiement à Monsieur Payet"
+{"intent":"send_payment_link","entities":{"client_name":"M. Payet","client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.9,"ava_response":"Lien de paiement préparé pour M. Payet."}`;
 
 export interface ClaudeContext {
   recent_clients?: { name: string; email?: string | null }[];
@@ -104,7 +109,8 @@ const IntentEntitiesSchema = z.object({
 const VALID_INTENTS = [
   'create_invoice', 'create_quote', 'send_reminder', 'get_financial_status',
   'get_invoice_list', 'mark_paid', 'schedule_appointment', 'send_document',
-  'find_document', 'sign_document', 'unknown',
+  'find_document', 'sign_document', 'create_expense_note', 'get_insights',
+  'send_payment_link', 'unknown',
 ] as const;
 
 const IntentResultSchema = z.object({
