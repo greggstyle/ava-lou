@@ -43,6 +43,11 @@ export interface Profile {
   late_penalty_indemnity: number;
   payment_terms_days: number;
   b2c_mediator: string | null;
+
+  // Bank coordinates (migration 0009) — optional, displayed on PDF + public view
+  iban: string | null;
+  bic: string | null;
+  bank_name: string | null;
 }
 
 export interface Client {

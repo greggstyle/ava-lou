@@ -33,6 +33,12 @@ function groupByVat(lines: LineItem[]): VatGroup[] {
   return Array.from(map.values()).sort((a, b) => b.vat_rate - a.vat_rate);
 }
 
+/** Pretty-print IBAN with a space every 4 chars (FR76 1234 5678…) */
+function formatIban(iban: string): string {
+  const compact = iban.replace(/\s+/g, '').toUpperCase();
+  return compact.replace(/(.{4})/g, '$1 ').trim();
+}
+
 function isInvoice(doc: Doc): doc is Invoice {
   return 'due_date' in doc;
 }
@@ -169,7 +175,26 @@ export function LegalMentions({
           <div>
             <strong>Échéance</strong> : {doc.due_date ? formatDateFR(doc.due_date) : 'à réception de facture'}
           </div>
-          <div style={{ marginTop: 6 }}>
+          {(profile?.iban || profile?.bic) && (
+            <div style={{
+              marginTop: 10, padding: 10, background: C.soft, border: `1px solid ${C.line}`, borderRadius: 8,
+              font: `400 12px/1.55 ${SANS}`, color: C.ink,
+            }}>
+              <strong>Règlement par virement</strong>
+              {profile?.bank_name && <> — {profile.bank_name}</>}
+              {profile?.iban && (
+                <div style={{ marginTop: 4, fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', letterSpacing: '0.04em' }}>
+                  IBAN : {formatIban(profile.iban)}
+                </div>
+              )}
+              {profile?.bic && (
+                <div style={{ fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace', letterSpacing: '0.04em' }}>
+                  BIC : {profile.bic}
+                </div>
+              )}
+            </div>
+          )}
+          <div style={{ marginTop: 8 }}>
             <strong>Pénalités de retard</strong> : taux {profile?.late_penalty_rate ?? 10.5} % l&apos;an. Indemnité forfaitaire pour frais de recouvrement : {formatPriceFR(profile?.late_penalty_indemnity ?? 40)} (art. D441-5 du Code de commerce).
           </div>
           {profile?.tva_franchise && (

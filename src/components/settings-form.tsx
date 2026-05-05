@@ -28,6 +28,10 @@ export interface ProfileForm {
   late_penalty_rate: string;
   payment_terms_days: string;
   b2c_mediator: string;
+  // Bank coordinates — used in PDF + public invoice page so clients can virer
+  iban: string;
+  bic: string;
+  bank_name: string;
 }
 
 const inputStyle: React.CSSProperties = {
@@ -79,6 +83,9 @@ export function SettingsForm({ initialProfile }: { initialProfile: ProfileForm }
         late_penalty_rate: profile.late_penalty_rate ? Number(profile.late_penalty_rate) : 10.5,
         payment_terms_days: profile.payment_terms_days ? Number(profile.payment_terms_days) : 30,
         b2c_mediator: profile.b2c_mediator || null,
+        iban: profile.iban ? profile.iban.replace(/\s+/g, '').toUpperCase() : null,
+        bic: profile.bic ? profile.bic.replace(/\s+/g, '').toUpperCase() : null,
+        bank_name: profile.bank_name || null,
       };
       const { error: upErr } = await supabase.from('profiles').upsert(payload);
       if (upErr) throw upErr;
@@ -279,6 +286,36 @@ export function SettingsForm({ initialProfile }: { initialProfile: ProfileForm }
               value={profile.b2c_mediator}
               onChange={(e) => setProfile({ ...profile, b2c_mediator: e.target.value })}
               placeholder="Ex: CNPM Médiation, 27 av. Henri Frenay — 13002 Marseille — cnpm-mediation-consommation.eu" />
+          </AvaField>
+        </div>
+      </AvaCard>
+
+      <AvaCard padding={16}>
+        <AvaLabel>Coordonnées bancaires</AvaLabel>
+        <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.muted, marginTop: 6, marginBottom: 12 }}>
+          Affichées sur les factures pour permettre à vos clients de payer par virement.
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <AvaField label="IBAN" hint="ex FR76 1234 5678 9012 3456 7890 123">
+            <input type="text" style={inputStyle}
+              value={profile.iban}
+              autoCapitalize="characters"
+              spellCheck={false}
+              onChange={(e) => setProfile({ ...profile, iban: e.target.value })}
+              placeholder="FR76 …" />
+          </AvaField>
+          <AvaField label="BIC / SWIFT" hint="8 ou 11 caractères, ex BNPAFRPP">
+            <input type="text" style={inputStyle}
+              value={profile.bic}
+              autoCapitalize="characters"
+              spellCheck={false}
+              onChange={(e) => setProfile({ ...profile, bic: e.target.value })}
+              placeholder="BNPAFRPPXXX" />
+          </AvaField>
+          <AvaField label="Nom de la banque" hint="ex Crédit Agricole Réunion">
+            <input type="text" style={inputStyle}
+              value={profile.bank_name}
+              onChange={(e) => setProfile({ ...profile, bank_name: e.target.value })} />
           </AvaField>
         </div>
       </AvaCard>
