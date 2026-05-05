@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AvaTopBar, AvaCard, AvaField, AvaButton, AvaDisclaimer, C, SANS } from '@/components/ava';
+import { AvaTopBar, AvaCard, AvaField, AvaButton, AvaDisclaimer, AvaLabel, C, SANS, SERIF } from '@/components/ava';
 
 const inputStyle: React.CSSProperties = {
   background: C.paper,
@@ -30,6 +30,46 @@ export default function NouvelleDepensePage() {
   const [notes, setNotes] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [ocrBusy, setOcrBusy] = React.useState(false);
+  const [ocrMsg, setOcrMsg] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  async function onPhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setOcrBusy(true);
+    setOcrMsg(null);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.append('photo', file);
+      const r = await fetch('/api/expense-from-photo', { method: 'POST', body: fd });
+      if (!r.ok) {
+        const j = await r.json().catch(() => ({}));
+        throw new Error(j.error ?? 'OCR échoué');
+      }
+      const j = await r.json();
+      // Apply extracted fields, but only if they came back
+      if (j.label) setLabel(j.label);
+      if (j.vendor) setVendor(j.vendor);
+      if (j.amount_ttc != null) setAmount(String(j.amount_ttc).replace('.', ','));
+      if (j.category) setCategory(j.category);
+      if (j.expense_date) setDate(j.expense_date);
+      if (j.notes) setNotes(j.notes);
+      const conf = Math.round((j.confidence ?? 0) * 100);
+      setOcrMsg(
+        conf < 50
+          ? `Lecture incertaine (${conf}%). Vérifiez les champs avant d'enregistrer.`
+          : `AVA a lu le ticket (${conf}% de confiance). Vérifiez puis enregistrez.`,
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur OCR');
+    } finally {
+      setOcrBusy(false);
+      // Reset the input so picking the same file twice still triggers
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -70,6 +110,43 @@ export default function NouvelleDepensePage() {
       <AvaTopBar title="Nouvelle dépense" onBack={() => router.back()} />
 
       <form onSubmit={onSubmit} style={{ padding: '8px 20px 60px', flex: 1 }}>
+        {/* Photo OCR — l'usine à gagner du temps pour les artisans */}
+        <AvaCard padding={16} style={{ marginTop: 12, background: C.warmYellow, border: `1px solid ${C.line}` }}>
+          <AvaLabel style={{ marginBottom: 6 }}>Importer un ticket</AvaLabel>
+          <div style={{ font: `400 13px/1.5 ${SANS}`, color: C.ink2, marginBottom: 10 }}>
+            Photographiez votre ticket Point P, Leroy Merlin, restau, péage… AVA lit le montant et la date pour vous.
+          </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={onPhotoChange}
+            style={{ display: 'none' }}
+            id="ava-photo-ocr"
+          />
+          <label htmlFor="ava-photo-ocr">
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: '100%', height: 48, borderRadius: 12, padding: '0 16px',
+              background: C.ink, color: C.paper, font: `600 15px/1 ${SANS}`,
+              cursor: ocrBusy ? 'progress' : 'pointer',
+              opacity: ocrBusy ? 0.7 : 1,
+            }}>
+              {ocrBusy ? 'Lecture du ticket…' : '📷 Prendre / Choisir une photo'}
+            </span>
+          </label>
+          {ocrMsg && (
+            <div style={{ marginTop: 8, font: `500 13px/1.4 ${SANS}`, color: C.green, padding: 8, background: C.greenSoft, borderRadius: 6 }}>
+              {ocrMsg}
+            </div>
+          )}
+        </AvaCard>
+
+        <div style={{ marginTop: 12, font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+          Ou saisissez à la main
+        </div>
+
         <AvaCard padding={18} style={{ display: 'flex', flexDirection: 'column', gap: 14, marginTop: 12 }}>
           <AvaField label="Libellé *">
             <input style={inputStyle} value={label} onChange={(e) => setLabel(e.target.value)} required placeholder="Achat carrelage" autoFocus />
