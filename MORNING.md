@@ -39,6 +39,7 @@ Vous m'avez dit avoir ajouté votre compte ✅. L'email TestFlight devrait arriv
 | V35 | **Lien de paiement Stripe/SumUp/PayPal** sur profil | #28 |
 | V36 | **Voice intents `list_relances` + `get_weekly_summary`** (AVA résume la semaine à voix haute) | #29 |
 | V37 | TTS sur SmartGreeting accueil (bouton ▶ pour écouter le brief) | #30 |
+| V38 | Toggle "AVA parle automatiquement" dans `/parametres` (localStorage) | #31 |
 
 Tout mergé sur `main`, déployé automatiquement sur Vercel. **0 build cassé.**
 
