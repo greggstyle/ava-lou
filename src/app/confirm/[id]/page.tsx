@@ -18,6 +18,8 @@ import {
   MarkPaidActions,
   ReminderActions,
   ReadOnlyActions,
+  GenericConfirmActions,
+  PaymentLinkActions,
 } from '@/components/confirm-actions';
 
 export const dynamic = 'force-dynamic';
@@ -63,6 +65,7 @@ export default async function ConfirmPage({ params }: PageProps) {
   const isAppointment = intent === 'schedule_appointment';
   const isExpense = intent === 'create_expense_note';
   const isInsights = intent === 'get_insights';
+  const isPaymentLink = intent === 'send_payment_link';
 
   type EnrichedEntities = Partial<IntentEntities> & {
     candidate_invoice_id?: string;
@@ -107,6 +110,16 @@ export default async function ConfirmPage({ params }: PageProps) {
       issue_date: string;
       status: string;
     }>;
+    payment_link?: {
+      invoice_id: string;
+      invoice_number: string | null;
+      amount_ttc: number;
+      public_url: string;
+      mailto: string;
+      subject: string;
+      body: string;
+      to: string;
+    };
   };
   const ent = entities as EnrichedEntities;
 
@@ -275,7 +288,11 @@ export default async function ConfirmPage({ params }: PageProps) {
           </AvaCard>
           <AvaDisclaimer />
           <div style={{ marginTop: 'auto' }}>
-            <MarkPaidActions actionId={id} invoiceId="_expense" />
+            <GenericConfirmActions
+              actionId={id}
+              redirectTo="/historique"
+              confirmLabel="Enregistrer la dépense"
+            />
           </div>
         </div>
       </main>
@@ -312,7 +329,60 @@ export default async function ConfirmPage({ params }: PageProps) {
           </AvaCard>
           <AvaDisclaimer />
           <div style={{ marginTop: 'auto' }}>
-            <MarkPaidActions actionId={id} invoiceId={'_appointment'} />
+            <GenericConfirmActions
+              actionId={id}
+              redirectTo="/"
+              confirmLabel="Confirmer le rendez-vous"
+            />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ─── send_payment_link (V13) ───────────────────────────────
+  if (isPaymentLink && ent.payment_link) {
+    const pl = ent.payment_link;
+    return (
+      <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
+        {Header}
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+          <AvaLabel>AVA a préparé :</AvaLabel>
+          <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
+          <AvaCard padding={18}>
+            <div style={{ font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+              Lien de paiement
+            </div>
+            <div style={{ font: `600 22px/1.1 ${SERIF}`, color: C.ink, marginTop: 8 }}>
+              Facture {pl.invoice_number ?? ''} — {formatPriceFR(pl.amount_ttc)}
+            </div>
+            <div style={{ font: `400 12px/1.4 ${SANS}`, color: C.muted, marginTop: 8 }}>
+              Destinataire : {pl.to || '— (email manquant)'}
+            </div>
+            <div style={{ font: `400 12px/1.4 ${SANS}`, color: C.muted, marginTop: 4, wordBreak: 'break-all' }}>
+              Lien : {pl.public_url}
+            </div>
+            <details style={{ marginTop: 12 }}>
+              <summary style={{ font: `500 12px/1 ${SANS}`, color: C.ink2, cursor: 'pointer' }}>
+                Voir le message
+              </summary>
+              <div style={{
+                marginTop: 8, padding: 10, background: C.soft, borderRadius: 8,
+                font: `400 12px/1.45 ${SANS}`, color: C.ink2, whiteSpace: 'pre-wrap',
+              }}>
+                <div style={{ fontWeight: 600, marginBottom: 6 }}>{pl.subject}</div>
+                {pl.body}
+              </div>
+            </details>
+          </AvaCard>
+          <AvaDisclaimer />
+          <div style={{ marginTop: 'auto' }}>
+            <PaymentLinkActions
+              actionId={id}
+              mailto={pl.mailto}
+              publicUrl={pl.public_url}
+              hasEmail={!!pl.to}
+            />
           </div>
         </div>
       </main>

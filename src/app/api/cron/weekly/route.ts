@@ -14,12 +14,13 @@ export const maxDuration = 60;
  * env can also be checked for manual triggers.
  */
 export async function GET(req: NextRequest) {
-  const isCron = req.headers.get('x-vercel-cron') === '1';
+  // Auth: REQUIRE CRON_SECRET. The `x-vercel-cron` header alone is not
+  // trustworthy — any HTTP client can set arbitrary headers. Vercel Cron
+  // sets `Authorization: Bearer $CRON_SECRET` automatically when the env
+  // var is configured. We never accept the header-only path.
   const secret = process.env.CRON_SECRET;
   const headerSecret = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-  const isAuthed = isCron || (secret && headerSecret === secret);
-
-  if (!isAuthed) {
+  if (!secret || headerSecret !== secret) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 

@@ -173,6 +173,130 @@ export function MarkPaidActions({
 }
 
 /**
+ * Generic confirm action — for intents that just need to commit the
+ * pre-built entities and route to a sensible "after" page (no resource ID
+ * to embed in the URL). Used for create_expense_note + schedule_appointment
+ * where MarkPaidActions previously misrouted to /factures/_expense (404).
+ */
+export function GenericConfirmActions({
+  actionId,
+  redirectTo,
+  confirmLabel = 'Confirmer',
+}: {
+  actionId: string;
+  redirectTo: string;
+  confirmLabel?: string;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  async function onConfirm() {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/actions/${actionId}/confirm`, { method: 'POST' });
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}));
+        throw new Error(j.error || 'Erreur.');
+      }
+      router.push(redirectTo);
+      router.refresh();
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Erreur.');
+      setBusy(false);
+    }
+  }
+
+  async function onCancel() {
+    try { await fetch(`/api/actions/${actionId}`, { method: 'DELETE' }); } catch {}
+    router.push('/');
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <AvaButton kind="validate" full onClick={onConfirm} disabled={busy}>
+        {busy ? 'Enregistrement…' : confirmLabel}
+      </AvaButton>
+      <AvaButton kind="ghost" full onClick={onCancel} disabled={busy}>
+        Annuler
+      </AvaButton>
+      {error && (
+        <div style={{ font: `500 13px/1.4 ${SANS}`, color: C.warn, textAlign: 'center' }}>
+          {error}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Send-payment-link: artisan dictates "envoie le lien de paiement à M. Payet".
+ * Enrich pre-built a `payment_link` object with a mailto URL. We just need to
+ * open it (which fires their mail client) and mark the action confirmed.
+ */
+export function PaymentLinkActions({
+  actionId,
+  mailto,
+  publicUrl,
+  hasEmail,
+}: {
+  actionId: string;
+  mailto: string;
+  publicUrl: string;
+  hasEmail: boolean;
+}) {
+  const router = useRouter();
+  const [busy, setBusy] = React.useState(false);
+  const [copied, setCopied] = React.useState(false);
+
+  async function markDone() {
+    setBusy(true);
+    try {
+      await fetch(`/api/actions/${actionId}/confirm`, { method: 'POST' });
+    } catch { /* swallow — UX matters more than action log */ }
+    router.push('/');
+    router.refresh();
+  }
+
+  function openMail() {
+    if (typeof window !== 'undefined') {
+      window.location.href = mailto;
+    }
+    void markDone();
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      window.prompt('Copiez le lien :', publicUrl);
+    }
+  }
+
+  async function onCancel() {
+    try { await fetch(`/api/actions/${actionId}`, { method: 'DELETE' }); } catch {}
+    router.push('/');
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <AvaButton kind="primary" full onClick={openMail} disabled={busy || !hasEmail}>
+        {hasEmail ? 'Ouvrir l’email' : 'Email du client manquant'}
+      </AvaButton>
+      <AvaButton kind="light" full onClick={copyLink} disabled={busy}>
+        {copied ? 'Lien copié ✓' : 'Copier le lien'}
+      </AvaButton>
+      <AvaButton kind="ghost" full onClick={onCancel} disabled={busy}>
+        Annuler
+      </AvaButton>
+    </div>
+  );
+}
+
+/**
  * send_reminder: artisan dictates "relance Mme Hoarau". Server drafted the email
  * body. User opens their mail client via mailto.
  */
