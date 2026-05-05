@@ -53,7 +53,7 @@ export default async function VoirFacturePage({ params }: PageProps) {
             AVA · {profile?.company_name || profile?.full_name || 'Document'}
           </span>
         </div>
-        <PrintButton />
+        <PrintButton pdfHref={`/api/factures/${id}/pdf?public=1`} />
       </header>
 
       <div style={{ marginBottom: 20 }}>

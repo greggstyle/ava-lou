@@ -68,7 +68,9 @@ if [ -z "$PNPM_BIN" ]; then
 fi
 "$PNPM_BIN" cap sync ios
 
-echo "Step 2/3: Xcode archive"
+: "${APPLE_TEAM_ID:?APPLE_TEAM_ID required (in .appstore/.env)}"
+
+echo "Step 2/3: Xcode archive (team $APPLE_TEAM_ID, bundle $APP_BUNDLE_ID)"
 rm -rf "$BUILD_DIR"
 xcodebuild \
   -project "$PROJECT" \
@@ -80,6 +82,9 @@ xcodebuild \
   -authenticationKeyID "$ASC_KEY_ID" \
   -authenticationKeyIssuerID "$ASC_ISSUER_ID" \
   -authenticationKeyPath "$(pwd)/$ASC_KEY_PATH" \
+  DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
+  CODE_SIGN_STYLE=Automatic \
+  PRODUCT_BUNDLE_IDENTIFIER="$APP_BUNDLE_ID" \
   archive
 
 echo "Step 3/3: Export + upload to App Store Connect"

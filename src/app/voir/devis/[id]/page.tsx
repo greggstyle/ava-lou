@@ -52,7 +52,7 @@ export default async function VoirDevisPage({ params }: PageProps) {
             AVA · {profile?.company_name || profile?.full_name || 'Document'}
           </span>
         </div>
-        <PrintButton />
+        <PrintButton pdfHref={`/api/devis/${id}/pdf?public=1`} />
       </header>
 
       <div style={{ marginBottom: 20 }}>

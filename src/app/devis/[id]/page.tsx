@@ -181,6 +181,7 @@ export default function DevisDetailPage() {
     if (!client?.email) return null;
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://ava-lou.vercel.app';
     const viewUrl = `${siteUrl}/voir/devis/${q.id}`;
+    const pdfUrl = `${siteUrl}/api/devis/${q.id}/pdf?public=1`;
     const subject = `Devis ${q.number ?? ''} — ${formatDateFR(q.issue_date)}`;
     const lines = (q.line_items ?? []) as LineItem[];
     const detail = lines
@@ -192,6 +193,7 @@ export default function DevisDetailPage() {
       `Vous trouverez ci-dessous le détail de votre devis ${q.number ?? ''} émis le ${formatDateFR(q.issue_date)}.`,
       '',
       `Version imprimable + Bon pour accord : ${viewUrl}`,
+      `Télécharger en PDF : ${pdfUrl}`,
       '',
       'DÉTAIL',
       detail || '- (à préciser)',
@@ -415,14 +417,22 @@ export default function DevisDetailPage() {
 
             <div style={{ marginTop: 14 }}>
               <AvaLabel style={{ marginBottom: 8 }}>Version partageable</AvaLabel>
-              <AvaButton
-                kind="light"
-                onClick={() => window.open(`/voir/devis/${quote.id}`, '_blank')}
-              >
-                Voir / Imprimer (Bon pour accord)
-              </AvaButton>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <AvaButton
+                  kind="primary"
+                  onClick={() => window.open(`/api/devis/${quote.id}/pdf`, '_blank')}
+                >
+                  Télécharger PDF
+                </AvaButton>
+                <AvaButton
+                  kind="light"
+                  onClick={() => window.open(`/voir/devis/${quote.id}`, '_blank')}
+                >
+                  Voir en ligne
+                </AvaButton>
+              </div>
               <div style={{ marginTop: 6, font: `400 12px/1.4 ${SANS}`, color: C.muted }}>
-                Page publique avec espace signature. Lien partageable inclus dans l&apos;email.
+                PDF avec « Bon pour accord » signable. Lien partageable inclus dans l&apos;email.
               </div>
             </div>
 
