@@ -176,7 +176,10 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-          <AvaLabel>AVA vous écoute :</AvaLabel>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA vous écoute :</AvaLabel>
+            <TtsButton text={avaResponse} label="" autoPlayOnce />
+          </div>
           <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 8 }}>
             <AvaCard padding={16}>
@@ -231,7 +234,10 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-          <AvaLabel>AVA a préparé une relance :</AvaLabel>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA a préparé une relance :</AvaLabel>
+            <TtsButton text={avaResponse} label="" />
+          </div>
           <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
           {hasDraft && (
             <AvaCard padding={16}>
@@ -357,7 +363,10 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-          <AvaLabel>AVA a préparé :</AvaLabel>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA a préparé :</AvaLabel>
+            <TtsButton text={avaResponse} label="" />
+          </div>
           <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
           <AvaCard padding={18}>
             <div style={{ font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2 }}>
@@ -460,7 +469,10 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-          <AvaLabel>AVA a trouvé :</AvaLabel>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA a trouvé :</AvaLabel>
+            <TtsButton text={avaResponse} label="" autoPlayOnce />
+          </div>
           <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
           {results.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -508,7 +520,10 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-          <AvaLabel>AVA vous conseille :</AvaLabel>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA vous conseille :</AvaLabel>
+            <TtsButton text={avaResponse} label="" autoPlayOnce />
+          </div>
           <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>
             {avaResponse}
           </div>
@@ -549,7 +564,10 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 24, flex: 1 }}>
-          <AvaLabel>AVA a entendu</AvaLabel>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA a entendu</AvaLabel>
+            <TtsButton text={avaResponse} label="" />
+          </div>
           {action.input_raw && (
             <div style={{ font: `400 14px/1.5 ${SANS}`, color: C.muted, fontStyle: 'italic' }}>
               « {action.input_raw} »
