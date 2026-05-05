@@ -289,6 +289,12 @@ export default async function HomePage() {
               <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Conseils</div>
             </AvaCard>
           </Link>
+          <Link href="/recurring" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{ cursor: 'pointer' }}>
+              <AvaLabel>Récurrents</AvaLabel>
+              <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Auto</div>
+            </AvaCard>
+          </Link>
         </div>
 
         <div style={{ height: 200 }} />
