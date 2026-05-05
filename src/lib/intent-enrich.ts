@@ -333,6 +333,74 @@ export async function enrichForSendReminder(
 }
 
 /**
+ * Parse French natural-language date references into a Date.
+ * Returns null if nothing recognized.
+ */
+function parseFrenchDate(input: string, baseDate: Date = new Date()): Date | null {
+  const t = input.toLowerCase().trim();
+  if (!t) return null;
+
+  // Try ISO date first (YYYY-MM-DD or full ISO)
+  const iso = new Date(input);
+  if (!isNaN(iso.getTime()) && /\d{4}-\d{2}-\d{2}/.test(input)) {
+    return iso;
+  }
+
+  const today = new Date(baseDate);
+  today.setHours(0, 0, 0, 0);
+  const result = new Date(today);
+
+  // "aujourd'hui"
+  if (/\b(aujourd['']?hui|ce\s+matin|cet\s+après-midi|ce\s+soir)\b/.test(t)) {
+    return result;
+  }
+  // "demain"
+  if (/\bdemain\b/.test(t)) {
+    result.setDate(result.getDate() + 1);
+    return result;
+  }
+  // "après-demain"
+  if (/\bapr[èe]s[\s-]?demain\b/.test(t)) {
+    result.setDate(result.getDate() + 2);
+    return result;
+  }
+
+  // "lundi", "mardi"... (next occurrence — within 7 days)
+  const DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+  for (let i = 0; i < 7; i++) {
+    const day = DAYS[i];
+    const dayRegex = new RegExp(`\\b${day}\\b`);
+    if (dayRegex.test(t)) {
+      const currentDay = today.getDay();
+      let delta = i - currentDay;
+      if (delta <= 0) delta += 7;
+      // "lundi prochain" still means next occurrence; "lundi en huit" means +14 (skip for now)
+      if (/\ben\s+huit\b/.test(t)) delta += 7;
+      result.setDate(result.getDate() + delta);
+      return result;
+    }
+  }
+
+  // "dans N jours"
+  const daysFromNow = t.match(/dans\s+(\d+)\s+jour/);
+  if (daysFromNow) {
+    const n = parseInt(daysFromNow[1], 10);
+    if (!isNaN(n)) {
+      result.setDate(result.getDate() + n);
+      return result;
+    }
+  }
+
+  // "dans une semaine"
+  if (/\bdans\s+une\s+semaine\b/.test(t)) {
+    result.setDate(result.getDate() + 7);
+    return result;
+  }
+
+  return null;
+}
+
+/**
  * schedule_appointment: parse date/time + client from the dictation.
  * Claude returns entities.date (target date), entities.notes (location/title hints).
  * We try to derive a starts_at ISO timestamp with reasonable fallbacks.
@@ -345,16 +413,23 @@ export async function enrichForScheduleAppointment(
   const entities: EnrichedEntities = { ...result.entities };
   const e = result.entities;
 
-  // Parse date from entities.date (Claude may return ISO YYYY-MM-DD or natural language)
+  // Parse date from entities.date (Claude may return ISO YYYY-MM-DD) OR
+  // from notes text using French natural language parser
   let startsAt: Date | null = null;
   if (e.date) {
-    const direct = new Date(e.date);
-    if (!isNaN(direct.getTime())) startsAt = direct;
+    startsAt = parseFrenchDate(e.date);
+  }
+  if (!startsAt && e.notes) {
+    startsAt = parseFrenchDate(e.notes);
   }
 
-  // If notes mentions hour like "14h" or "14:00", apply
+  // Hour parsing: "14h", "14:00", "14h30", "8 heures"
   const notesText = e.notes ?? '';
-  const hourMatch = notesText.match(/(\d{1,2})\s*[h:]\s*(\d{2})?/);
+  const dateText = e.date ?? '';
+  const combinedText = `${dateText} ${notesText}`;
+  const hourMatch =
+    combinedText.match(/(\d{1,2})\s*[h:]\s*(\d{2})?/) ??
+    combinedText.match(/(\d{1,2})\s*heures?(?:\s+(?:et\s+)?(\d{1,2}))?/i);
   if (startsAt && hourMatch) {
     const h = parseInt(hourMatch[1], 10);
     const m = hourMatch[2] ? parseInt(hourMatch[2], 10) : 0;
@@ -367,6 +442,9 @@ export async function enrichForScheduleAppointment(
   if (!startsAt) {
     startsAt = new Date();
     startsAt.setDate(startsAt.getDate() + 1);
+    startsAt.setHours(9, 0, 0, 0);
+  } else if (startsAt.getHours() === 0 && startsAt.getMinutes() === 0) {
+    // No specific time given → default to 9h
     startsAt.setHours(9, 0, 0, 0);
   }
 
