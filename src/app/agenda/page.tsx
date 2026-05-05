@@ -142,7 +142,10 @@ export default async function AgendaPage() {
           </div>
         )}
 
-        <div style={{ marginTop: 32 }}>
+        <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Link href="/agenda/nouveau" style={{ textDecoration: 'none' }}>
+            <AvaButton kind="primary" full>Nouveau RDV</AvaButton>
+          </Link>
           <Link href="/" style={{ textDecoration: 'none' }}>
             <AvaButton kind="light" full>Retour à l&apos;accueil</AvaButton>
           </Link>
