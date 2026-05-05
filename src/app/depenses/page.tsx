@@ -66,7 +66,7 @@ export default async function DepensesPage() {
         }
       />
 
-      <div style={{ padding: '8px 20px 60px', flex: 1 }}>
+      <div style={{ padding: '8px 20px 120px', flex: 1, position: 'relative' }}>
         <h1 style={{ font: `600 26px/1.15 ${SERIF}`, color: C.ink, marginTop: 6 }}>
           Vos <em style={{ fontStyle: 'italic' }}>dépenses</em>
         </h1>
@@ -142,6 +142,19 @@ export default async function DepensesPage() {
             </div>
           )}
         </div>
+      </div>
+
+      <div
+        style={{
+          position: 'sticky',
+          bottom: 0,
+          padding: '12px 20px 20px',
+          background: `linear-gradient(to top, ${C.bone} 70%, rgba(244,243,238,0))`,
+        }}
+      >
+        <Link href="/depenses/nouvelle" style={{ textDecoration: 'none' }}>
+          <AvaButton kind="primary" full>Nouvelle dépense</AvaButton>
+        </Link>
       </div>
     </main>
   );

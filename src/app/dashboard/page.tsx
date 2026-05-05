@@ -83,6 +83,16 @@ export default async function DashboardPage() {
     .eq('user_id', user.id)
     .in('status', ['envoyé', 'brouillon']);
 
+  // Expenses this month for net balance
+  const monthStartIso = monthStart.toISOString().slice(0, 10);
+  const { data: monthExpenses } = await supabase
+    .from('expenses')
+    .select('amount_ttc')
+    .eq('user_id', user.id)
+    .gte('expense_date', monthStartIso);
+  const expensesThisMonth = (monthExpenses ?? []).reduce((s, e) => s + Number(e.amount_ttc), 0);
+  const netThisMonth = paidThisMonth - expensesThisMonth;
+
   // Recent activity feed: last 5 ava_actions
   const { data: recentActions } = await supabase
     .from('ava_actions')
@@ -158,6 +168,31 @@ export default async function DashboardPage() {
             </div>
           </AvaCard>
         </div>
+
+        {/* Net balance this month */}
+        <AvaCard padding={18} style={{ marginTop: 16 }}>
+          <AvaLabel>Bilan ce mois</AvaLabel>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 8 }}>
+            <div>
+              <div style={{ font: `400 11px/1.3 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Recettes</div>
+              <div style={{ font: `600 20px/1.1 ${SERIF}`, color: C.green, marginTop: 4, ...TNUM }}>
+                {formatPriceFR(paidThisMonth)}
+              </div>
+            </div>
+            <div>
+              <div style={{ font: `400 11px/1.3 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Dépenses</div>
+              <div style={{ font: `600 20px/1.1 ${SERIF}`, color: C.warn, marginTop: 4, ...TNUM }}>
+                − {formatPriceFR(expensesThisMonth)}
+              </div>
+            </div>
+            <div style={{ borderLeft: `1px solid ${C.line}`, paddingLeft: 12 }}>
+              <div style={{ font: `400 11px/1.3 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>Net</div>
+              <div style={{ font: `600 20px/1.1 ${SERIF}`, color: netThisMonth >= 0 ? C.ink : C.warn, marginTop: 4, ...TNUM }}>
+                {netThisMonth >= 0 ? '' : '− '}{formatPriceFR(Math.abs(netThisMonth))}
+              </div>
+            </div>
+          </div>
+        </AvaCard>
 
         {/* Top overdue clients */}
         {topOverdue.length > 0 && (

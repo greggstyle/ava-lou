@@ -228,6 +228,18 @@ export default async function HomePage() {
               <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>RDV</div>
             </AvaCard>
           </Link>
+          <Link href="/depenses" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{ cursor: 'pointer' }}>
+              <AvaLabel>Dépenses</AvaLabel>
+              <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Frais</div>
+            </AvaCard>
+          </Link>
+          <Link href="/historique" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{ cursor: 'pointer' }}>
+              <AvaLabel>Historique</AvaLabel>
+              <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Vocal</div>
+            </AvaCard>
+          </Link>
         </div>
 
         <div style={{ height: 200 }} />
