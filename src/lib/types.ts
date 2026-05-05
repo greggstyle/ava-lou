@@ -98,6 +98,21 @@ export interface Quote {
   created_at: string;
 }
 
+export type AppointmentStatus = 'planifié' | 'effectué' | 'annulé' | 'reporté';
+
+export interface Appointment {
+  id: string;
+  user_id: string;
+  client_id: string | null;
+  title: string;
+  starts_at: string;
+  ends_at: string | null;
+  location: string | null;
+  notes: string | null;
+  status: AppointmentStatus;
+  created_at: string;
+}
+
 export type AvaIntent =
   | 'create_invoice'
   | 'create_quote'

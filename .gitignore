@@ -33,6 +33,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# App Store Connect API key (NEVER commit secrets)
+.appstore/
+AuthKey_*.p8
+
 # vercel
 .vercel
 

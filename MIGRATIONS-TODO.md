@@ -9,6 +9,7 @@ et collez le contenu du fichier suivant. Cliquez **Run**.
 
 - [ ] `supabase/migrations/0003_idempotency_and_legal.sql` — atomic claim status, UNIQUE document numbers, profiles + clients legal fields
 - [ ] `supabase/migrations/0004_notifications.sql` — table notifications pour les rappels proactifs (V3 cron)
+- [ ] `supabase/migrations/0005_appointments.sql` — table appointments pour les RDV vocaux (V4)
 
 ## Applied (référence)
 

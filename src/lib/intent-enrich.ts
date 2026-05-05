@@ -42,6 +42,15 @@ export type EnrichedEntities = IntentEntities & {
     issue_date: string;
     status: string;
   }>;
+  appointment?: {
+    title: string;
+    starts_at: string;
+    ends_at: string | null;
+    location: string | null;
+    client_id: string | null;
+    client_name: string | null;
+    duration_min?: number;
+  };
 };
 
 interface EnrichResult {
@@ -321,6 +330,76 @@ export async function enrichForSendReminder(
     ? `Relance prête pour ${client.name} (${formatPriceFR(total)} sur ${candidates.length} facture${candidates.length > 1 ? 's' : ''}). Vérifiez le message et envoyez.`
     : `Relance préparée pour ${client.name}, mais l'email du client manque. Ajoutez-le dans la fiche client puis renvoyez.`;
   return { entities, ava_response: ava_text };
+}
+
+/**
+ * schedule_appointment: parse date/time + client from the dictation.
+ * Claude returns entities.date (target date), entities.notes (location/title hints).
+ * We try to derive a starts_at ISO timestamp with reasonable fallbacks.
+ */
+export async function enrichForScheduleAppointment(
+  supabase: SupabaseClient,
+  userId: string,
+  result: IntentResult,
+): Promise<EnrichResult> {
+  const entities: EnrichedEntities = { ...result.entities };
+  const e = result.entities;
+
+  // Parse date from entities.date (Claude may return ISO YYYY-MM-DD or natural language)
+  let startsAt: Date | null = null;
+  if (e.date) {
+    const direct = new Date(e.date);
+    if (!isNaN(direct.getTime())) startsAt = direct;
+  }
+
+  // If notes mentions hour like "14h" or "14:00", apply
+  const notesText = e.notes ?? '';
+  const hourMatch = notesText.match(/(\d{1,2})\s*[h:]\s*(\d{2})?/);
+  if (startsAt && hourMatch) {
+    const h = parseInt(hourMatch[1], 10);
+    const m = hourMatch[2] ? parseInt(hourMatch[2], 10) : 0;
+    if (h >= 0 && h < 24) {
+      startsAt.setHours(h, m, 0, 0);
+    }
+  }
+
+  // If still no date, default to next day at 9h
+  if (!startsAt) {
+    startsAt = new Date();
+    startsAt.setDate(startsAt.getDate() + 1);
+    startsAt.setHours(9, 0, 0, 0);
+  }
+
+  // Try to match client
+  let clientId: string | null = null;
+  let clientName: string | null = e.client_name;
+  if (e.client_name) {
+    const c = await findClientByName(supabase, userId, e.client_name);
+    if (c) {
+      clientId = c.id;
+      clientName = c.name;
+    }
+  }
+
+  const title = clientName ? `RDV ${clientName}` : 'Rendez-vous';
+  const location = notesText.match(/(?:chez|à|au)\s+([^,.]{3,60})/i)?.[1]?.trim() ?? null;
+
+  entities.appointment = {
+    title,
+    starts_at: startsAt.toISOString(),
+    ends_at: null,
+    location,
+    client_id: clientId,
+    client_name: clientName,
+  };
+
+  const dateStr = startsAt.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const timeStr = startsAt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  const ava_response = clientName
+    ? `RDV avec ${clientName} ${dateStr} à ${timeStr}${location ? ` (${location})` : ''} ?`
+    : `RDV ${dateStr} à ${timeStr} ?`;
+
+  return { entities, ava_response };
 }
 
 export async function enrichForSendDocument(

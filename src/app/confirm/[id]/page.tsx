@@ -60,6 +60,7 @@ export default async function ConfirmPage({ params }: PageProps) {
   const isInvoiceList = intent === 'get_invoice_list';
   const isFind = intent === 'find_document';
   const isSendDoc = intent === 'send_document';
+  const isAppointment = intent === 'schedule_appointment';
 
   type EnrichedEntities = Partial<IntentEntities> & {
     candidate_invoice_id?: string;
@@ -80,6 +81,14 @@ export default async function ConfirmPage({ params }: PageProps) {
     reminder_to?: string;
     list_filter?: string;
     candidate_client_email?: string;
+    appointment?: {
+      title: string;
+      starts_at: string;
+      ends_at: string | null;
+      location: string | null;
+      client_id: string | null;
+      client_name: string | null;
+    };
     search_results?: Array<{
       id: string;
       kind: 'facture' | 'devis';
@@ -226,6 +235,43 @@ export default async function ConfirmPage({ params }: PageProps) {
             ) : (
               <LowConfidenceActions actionId={id} intent={intent} />
             )}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ─── schedule_appointment ──────────────────────────────────
+  if (isAppointment && ent.appointment) {
+    const apt = ent.appointment;
+    const start = new Date(apt.starts_at);
+    const dateLabel = start.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
+    const timeLabel = start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return (
+      <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
+        {Header}
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+          <AvaLabel>AVA a compris :</AvaLabel>
+          <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
+          <AvaCard padding={18}>
+            <div style={{ font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+              Rendez-vous
+            </div>
+            <div style={{ font: `400 24px/1.2 ${SERIF}`, color: C.ink, marginTop: 6 }}>
+              {apt.title}
+            </div>
+            <div style={{ font: `500 14px/1.4 ${SANS}`, color: C.ink2, marginTop: 8, textTransform: 'capitalize' }}>
+              {dateLabel} · {timeLabel}
+            </div>
+            {apt.location && (
+              <div style={{ font: `400 13px/1.4 ${SANS}`, color: C.muted, marginTop: 4 }}>
+                📍 {apt.location}
+              </div>
+            )}
+          </AvaCard>
+          <AvaDisclaimer />
+          <div style={{ marginTop: 'auto' }}>
+            <MarkPaidActions actionId={id} invoiceId={'_appointment'} />
           </div>
         </div>
       </main>

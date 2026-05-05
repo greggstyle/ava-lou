@@ -209,6 +209,41 @@ export async function POST(
     return NextResponse.json({ target_table: table, target_id: inserted.id });
   }
 
+  // schedule_appointment: insert into appointments
+  if (intent === 'schedule_appointment') {
+    const apt = (entities as Partial<IntentEntities> & {
+      appointment?: { title: string; starts_at: string; ends_at: string | null; location: string | null; client_id: string | null }
+    }).appointment;
+    if (!apt || !apt.starts_at) {
+      await supabase.from('ava_actions').update({ status: 'pending' }).eq('id', id).eq('user_id', user.id).eq('status', 'executing');
+      return NextResponse.json({ error: 'Date du RDV manquante.' }, { status: 400 });
+    }
+    const { data: inserted, error: insErr } = await supabase
+      .from('appointments')
+      .insert({
+        user_id: user.id,
+        client_id: apt.client_id,
+        title: apt.title,
+        starts_at: apt.starts_at,
+        ends_at: apt.ends_at,
+        location: apt.location,
+        notes: action.input_raw,
+        status: 'planifié',
+      })
+      .select('id')
+      .single();
+    if (insErr || !inserted) {
+      await supabase.from('ava_actions').update({ status: 'pending' }).eq('id', id).eq('user_id', user.id).eq('status', 'executing');
+      return NextResponse.json({ error: 'Impossible de créer le RDV.' }, { status: 500 });
+    }
+    await supabase
+      .from('ava_actions')
+      .update({ status: 'executed', target_table: 'appointments', target_id: inserted.id })
+      .eq('id', id)
+      .eq('user_id', user.id);
+    return NextResponse.json({ target_table: 'appointments', target_id: inserted.id });
+  }
+
   // mark_paid: update invoice status to 'payée'
   if (intent === 'mark_paid') {
     const candidateId = (entities as Partial<IntentEntities> & { candidate_invoice_id?: string }).candidate_invoice_id;
