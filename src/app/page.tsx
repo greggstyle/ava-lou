@@ -388,6 +388,18 @@ export default async function HomePage() {
               <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Annuel</div>
             </AvaCard>
           </Link>
+          <Link href="/relances" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{
+              cursor: 'pointer',
+              background: greetingCtx.invoicesOverdue.count > 0 ? '#FFF8E5' : C.paper,
+              borderColor: greetingCtx.invoicesOverdue.count > 0 ? '#F0E6BD' : C.line,
+            }}>
+              <AvaLabel color={greetingCtx.invoicesOverdue.count > 0 ? C.warn : undefined}>Relances</AvaLabel>
+              <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>
+                {greetingCtx.invoicesOverdue.count > 0 ? `${greetingCtx.invoicesOverdue.count} en retard` : 'À jour'}
+              </div>
+            </AvaCard>
+          </Link>
         </div>
 
         <div style={{ height: 200 }} />
