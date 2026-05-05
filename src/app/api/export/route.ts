@@ -32,9 +32,21 @@ const QuerySchema = z.object({
 
 // CSV escape: wrap in double-quotes if value contains separator, newline, or quote.
 // Double existing quotes per RFC 4180.
+//
+// Defense against formula injection (OWASP CSV injection): when the *first*
+// character of a cell is one of `=`, `+`, `-`, `@`, `\t`, `\r`, Excel /
+// LibreOffice / Numbers will treat it as a formula. An attacker who controls
+// any user-input field (client name, notes, SIRET, etc.) could pop a remote
+// link or run a HYPERLINK() in the accountant's spreadsheet. We neutralize by
+// prefixing a single quote — invisible to humans, harmless to formula engine.
 function csvEscape(v: unknown): string {
   if (v === null || v === undefined) return '';
   let s = typeof v === 'string' ? v : String(v);
+  // Formula injection guard — prefix BEFORE the quoting check so the prefix
+  // gets quoted along with the rest if needed.
+  if (s.length > 0 && /^[=+\-@\t\r]/.test(s)) {
+    s = "'" + s;
+  }
   if (s.includes(';') || s.includes('"') || s.includes('\n') || s.includes('\r')) {
     s = '"' + s.replace(/"/g, '""') + '"';
   }

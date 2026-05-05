@@ -13,12 +13,10 @@ export const maxDuration = 300; // 5 min — Claude calls take time
  * Auth: Vercel cron sets `x-vercel-cron: 1`. Optional CRON_SECRET fallback.
  */
 export async function GET(req: NextRequest) {
-  const isCron = req.headers.get('x-vercel-cron') === '1';
+  // REQUIRE CRON_SECRET — see weekly/route.ts for rationale
   const secret = process.env.CRON_SECRET;
   const headerSecret = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-  const isAuthed = isCron || (secret && headerSecret === secret);
-
-  if (!isAuthed) {
+  if (!secret || headerSecret !== secret) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
 

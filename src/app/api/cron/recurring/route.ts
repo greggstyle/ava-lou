@@ -14,11 +14,12 @@ export const maxDuration = 60;
  * Auth: Vercel cron sets `x-vercel-cron: 1`. Optional CRON_SECRET fallback.
  */
 export async function GET(req: NextRequest) {
-  const isCron = req.headers.get('x-vercel-cron') === '1';
+  // REQUIRE CRON_SECRET — see weekly/route.ts for rationale
   const secret = process.env.CRON_SECRET;
   const headerSecret = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-  const isAuthed = isCron || (secret && headerSecret === secret);
-  if (!isAuthed) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  if (!secret || headerSecret !== secret) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
 
   const supabase = createAdminClient();
   const todayIso = new Date().toISOString().slice(0, 10);

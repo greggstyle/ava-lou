@@ -35,11 +35,15 @@ export default async function HomePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, is_drom, vat_default')
+    .select('full_name, is_drom, vat_default, siret, company_name')
     .eq('id', user.id)
     .maybeSingle();
 
   const greeting = profile?.full_name?.split(' ')[0] || process.env.NEXT_PUBLIC_DEFAULT_GREETING || 'Lou';
+
+  // Onboarding completeness — SIRET + company name are the absolute minimum
+  // for legal mentions on factures. Without them, the PDF is non-conforme.
+  const profileIncomplete = !profile?.siret || !profile?.company_name;
 
   const { data: recentInvoices } = await supabase
     .from('invoices')
@@ -112,6 +116,27 @@ export default async function HomePage() {
         >
           Qu&apos;est-ce qu&apos;on règle <em style={{ fontStyle: 'italic' }}>aujourd&apos;hui</em> ?
         </h1>
+
+        {profileIncomplete && (
+          <Link href="/parametres" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{
+              marginTop: 14,
+              background: C.warmYellow,
+              border: `1px solid ${C.line}`,
+              cursor: 'pointer',
+            }}>
+              <div style={{ font: `600 14px/1.3 ${SANS}`, color: C.ink }}>
+                Complétez votre profil pour facturer
+              </div>
+              <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.ink2, marginTop: 4 }}>
+                Sans SIRET et raison sociale, vos factures ne sont pas conformes (mentions L441-9). Cela prend deux minutes.
+              </div>
+              <div style={{ font: `500 12px/1 ${SANS}`, color: C.ink, marginTop: 8, textDecoration: 'underline' }}>
+                Aller aux paramètres →
+              </div>
+            </AvaCard>
+          </Link>
+        )}
 
         {notifications && notifications.length > 0 && (
           <NotificationsBanner initial={notifications} />
