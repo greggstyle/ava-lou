@@ -99,6 +99,10 @@ export async function POST(req: Request) {
         const enriched = await enrichForExpense(result);
         entities = enriched.entities;
         ava_response = enriched.ava_response;
+      } else if (result.intent === 'get_insights') {
+        // Read-only: just route to /insights, no entity enrichment needed.
+        // Override the response so it always points the user to the right place.
+        ava_response = "Voici vos conseils stratégiques.";
       }
     } catch (enrichErr) {
       console.warn('[intent] enrichment failed:', enrichErr);
