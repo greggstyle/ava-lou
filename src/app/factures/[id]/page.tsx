@@ -418,7 +418,35 @@ export default function FactureDetailPage() {
               </div>
             </div>
 
-            <div style={{ marginTop: 28, display: 'flex', justifyContent: 'center' }}>
+            <div style={{ marginTop: 22, display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <AvaButton
+                kind="light"
+                full
+                onClick={async () => {
+                  if (saving) return;
+                  setSaving(true);
+                  try {
+                    const r = await fetch(`/api/factures/${invoice.id}/duplicate`, { method: 'POST' });
+                    if (!r.ok) {
+                      const j = await r.json().catch(() => ({}));
+                      throw new Error(j.error ?? 'Duplication échouée');
+                    }
+                    const j = await r.json();
+                    router.push(`/factures/${j.id}`);
+                    router.refresh();
+                  } catch (e) {
+                    setError(e instanceof Error ? e.message : 'Erreur');
+                  } finally {
+                    setSaving(false);
+                  }
+                }}
+                disabled={saving}
+              >
+                {saving ? 'Duplication…' : 'Dupliquer cette facture'}
+              </AvaButton>
+            </div>
+
+            <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center' }}>
               <AvaButton kind="danger" onClick={onDelete}>Supprimer cette facture</AvaButton>
             </div>
           </>
