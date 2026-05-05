@@ -11,6 +11,7 @@ import {
   enrichForSendDocument,
   enrichForScheduleAppointment,
   enrichForExpense,
+  enrichForPaymentLink,
 } from '@/lib/intent-enrich';
 
 export const runtime = 'nodejs';
@@ -103,6 +104,10 @@ export async function POST(req: Request) {
         // Read-only: just route to /insights, no entity enrichment needed.
         // Override the response so it always points the user to the right place.
         ava_response = "Voici vos conseils stratégiques.";
+      } else if (result.intent === 'send_payment_link') {
+        const enriched = await enrichForPaymentLink(supabase, user.id, result);
+        entities = enriched.entities;
+        ava_response = enriched.ava_response;
       }
     } catch (enrichErr) {
       console.warn('[intent] enrichment failed:', enrichErr);
