@@ -813,7 +813,8 @@ export async function enrichForPaymentLink(
 
   // Public URL — read from env at request time (Vercel sets NEXT_PUBLIC_SITE_URL)
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ava-lou.vercel.app';
-  const publicUrl = `${baseUrl}/voir/facture/${inv.id}`;
+  const { buildPublicUrl } = await import('./public-url');
+  const publicUrl = buildPublicUrl(baseUrl, 'facture', inv.id);
 
   const subject = `Lien de paiement — facture ${inv.number ?? ''}`.trim();
   const body = [

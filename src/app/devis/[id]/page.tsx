@@ -176,12 +176,13 @@ export default function DevisDetailPage() {
     router.refresh();
   }
 
-  function buildMailto(q: QuoteWithClient): string | null {
+  function buildMailto(q: QuoteWithClient, token: string = ''): string | null {
     const client = q.clients;
     if (!client?.email) return null;
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://ava-lou.vercel.app';
-    const viewUrl = `${siteUrl}/voir/devis/${q.id}`;
-    const pdfUrl = `${siteUrl}/api/devis/${q.id}/pdf?public=1`;
+    const tokenSuffix = token ? `?t=${token}` : '';
+    const viewUrl = `${siteUrl}/voir/devis/${q.id}${tokenSuffix}`;
+    const pdfUrl = `${siteUrl}/api/devis/${q.id}/pdf?public=1${token ? `&t=${token}` : ''}`;
     const subject = `Devis ${q.number ?? ''} — ${formatDateFR(q.issue_date)}`;
     const lines = (q.line_items ?? []) as LineItem[];
     const detail = lines
@@ -379,40 +380,31 @@ export default function DevisDetailPage() {
 
             <div style={{ marginTop: 18 }}>
               <AvaLabel style={{ marginBottom: 8 }}>Envoyer au client</AvaLabel>
-              {(() => {
-                const mailto = buildMailto(quote);
-                if (mailto) {
-                  return (
-                    <a
-                      href={mailto}
-                      onClick={onSendEmail}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 8,
-                        height: 50,
-                        padding: '0 20px',
-                        background: C.green,
-                        color: '#FFFFFF',
-                        textDecoration: 'none',
-                        borderRadius: 14,
-                        font: `600 16px/1 ${SANS}`,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Envoyer par email
-                    </a>
-                  );
-                }
-                return (
-                  <AvaCard padding={14} style={{ background: C.soft }}>
-                    <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.ink2 }}>
-                      Ajoutez l&apos;email du client pour pouvoir l&apos;envoyer.
-                    </div>
-                  </AvaCard>
-                );
-              })()}
+              {quote.clients?.email ? (
+                <AvaButton
+                  kind="validate"
+                  full
+                  onClick={async () => {
+                    let token = '';
+                    try {
+                      const r = await fetch(`/api/public-url/devis/${quote.id}`);
+                      if (r.ok) token = (await r.json()).token ?? '';
+                    } catch { /* noop */ }
+                    const mailto = buildMailto(quote, token);
+                    if (!mailto) return;
+                    onSendEmail();
+                    window.location.href = mailto;
+                  }}
+                >
+                  Envoyer par email
+                </AvaButton>
+              ) : (
+                <AvaCard padding={14} style={{ background: C.soft }}>
+                  <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.ink2 }}>
+                    Ajoutez l&apos;email du client pour pouvoir l&apos;envoyer.
+                  </div>
+                </AvaCard>
+              )}
             </div>
 
             <div style={{ marginTop: 14 }}>
@@ -426,7 +418,14 @@ export default function DevisDetailPage() {
                 </AvaButton>
                 <AvaButton
                   kind="light"
-                  onClick={() => window.open(`/voir/devis/${quote.id}`, '_blank')}
+                  onClick={async () => {
+                    let token = '';
+                    try {
+                      const r = await fetch(`/api/public-url/devis/${quote.id}`);
+                      if (r.ok) token = (await r.json()).token ?? '';
+                    } catch { /* noop */ }
+                    window.open(`/voir/devis/${quote.id}${token ? `?t=${token}` : ''}`, '_blank');
+                  }}
                 >
                   Voir en ligne
                 </AvaButton>

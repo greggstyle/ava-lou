@@ -7,15 +7,25 @@ import type { Client, Invoice, Profile } from '@/lib/types';
 import { PrintButton } from '@/components/print-button';
 import { ShareButton } from '@/components/share-button';
 import { headers } from 'next/headers';
+import { buildPublicUrl, verifyPublicId, publicUrlRequiresToken, signPublicId } from '@/lib/public-url';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ t?: string }>;
 }
 
-export default async function VoirFacturePage({ params }: PageProps) {
+export default async function VoirFacturePage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const { t: token } = await searchParams;
+
+  // Token check: invalid tokens always fail. Missing tokens fail only when
+  // the deployment is in strict mode (NEXT_PUBLIC_PUBLIC_URL_REQUIRE_TOKEN=true).
+  const verdict = verifyPublicId('facture', id, token);
+  if (verdict === 'invalid') notFound();
+  if (verdict === 'missing' && publicUrlRequiresToken()) notFound();
+
   // Public view: bypass RLS using admin client. UUIDs are unguessable.
   const supabase = createAdminClient();
 
@@ -33,11 +43,15 @@ export default async function VoirFacturePage({ params }: PageProps) {
     .eq('id', invoice.user_id)
     .maybeSingle();
 
-  // Need the absolute public URL so WhatsApp share works correctly
+  // Need the absolute public URL so WhatsApp share works correctly. Always
+  // include the signed token so forwarded shares carry it forward.
   const h = await headers();
   const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'ava-lou.vercel.app';
   const proto = h.get('x-forwarded-proto') ?? 'https';
-  const publicUrl = `${proto}://${host}/voir/facture/${id}`;
+  const origin = `${proto}://${host}`;
+  const publicUrl = buildPublicUrl(origin, 'facture', id);
+  // Signed token also goes onto the PDF endpoint so the print button works
+  const pdfToken = signPublicId('facture', id);
   const clientObj = invoice.clients as { name?: string | null; phone?: string | null } | null;
   const clientPhone = (invoice as Invoice & { clients?: { phone?: string | null } | null }).clients?.phone ?? null;
 
@@ -72,7 +86,7 @@ export default async function VoirFacturePage({ params }: PageProps) {
             clientName={clientObj?.name ?? null}
             clientPhone={clientPhone}
           />
-          <PrintButton pdfHref={`/api/factures/${id}/pdf?public=1`} />
+          <PrintButton pdfHref={pdfToken ? `/api/factures/${id}/pdf?public=1&t=${pdfToken}` : `/api/factures/${id}/pdf?public=1`} />
         </span>
       </header>
 
