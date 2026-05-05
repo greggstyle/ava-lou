@@ -292,10 +292,13 @@ export function ListenUi() {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« Facture pour M. Payet, 3 heures à 55 € »</div>
-                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« Devis Mme Hoarau, pose carrelage 25 m² à 45 € »</div>
-                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« M. Payet a payé »</div>
+                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« Devis Mme Hoarau, pose carrelage 25 m² à 45 €, plus déplacement 80 € »</div>
+                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« M. Payet a payé la facture »</div>
+                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« Envoie le lien de paiement à M. Payet »</div>
                 <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« Qu&apos;est-ce qui rentre cette semaine ? »</div>
                 <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« Relance Mme Hoarau »</div>
+                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« J&apos;ai acheté du carrelage chez Point P pour 340 € »</div>
+                <div style={{ fontStyle: 'italic', fontFamily: SERIF, fontSize: 14 }}>« Tes conseils »</div>
               </div>
             </div>
             <div style={{
