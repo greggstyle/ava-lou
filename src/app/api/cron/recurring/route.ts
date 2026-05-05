@@ -99,6 +99,30 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Auto-status transitions — runs every day on the same cron tick to keep
+  // status fields in sync with reality. Without this, "factures en retard"
+  // counters in /historique, /insights, SmartGreeting, weekly digests are
+  // all under-reported because no human moves the status.
+  //
+  // Invoices: envoyée → en_retard if due_date < today
+  // Quotes:   envoyé  → expiré    if expiry_date < today
+  const { data: overdueRows } = await supabase
+    .from('invoices')
+    .update({ status: 'en_retard' })
+    .eq('status', 'envoyée')
+    .lt('due_date', todayIso)
+    .select('id');
+
+  const { data: expiredRows } = await supabase
+    .from('quotes')
+    .update({ status: 'expiré' })
+    .eq('status', 'envoyé')
+    .lt('expiry_date', todayIso)
+    .select('id');
+
+  const overdueCount = (overdueRows ?? []).length;
+  const expiredCount = (expiredRows ?? []).length;
+
   return NextResponse.json({
     ok: true,
     today: todayIso,
@@ -106,5 +130,7 @@ export async function GET(req: NextRequest) {
     generated,
     skipped,
     errors,
+    overdue_marked: overdueCount,
+    quotes_expired: expiredCount,
   });
 }
