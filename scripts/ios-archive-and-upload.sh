@@ -45,8 +45,8 @@ if [ ! -f "$ASC_KEY_PATH" ]; then
   exit 1
 fi
 
-# Build paths
-WORKSPACE="ios/App/App.xcworkspace"
+# Build paths — Capacitor 8 uses .xcodeproj directly (no workspace)
+PROJECT="ios/App/App.xcodeproj"
 SCHEME="App"
 BUILD_DIR="ios/App/build"
 ARCHIVE_PATH="$BUILD_DIR/AVA.xcarchive"
@@ -59,9 +59,10 @@ pnpm cap sync ios
 echo "Step 2/3: Xcode archive"
 rm -rf "$BUILD_DIR"
 xcodebuild \
-  -workspace "$WORKSPACE" \
+  -project "$PROJECT" \
   -scheme "$SCHEME" \
   -configuration Release \
+  -destination "generic/platform=iOS" \
   -archivePath "$ARCHIVE_PATH" \
   -allowProvisioningUpdates \
   -authenticationKeyID "$ASC_KEY_ID" \
