@@ -5,6 +5,7 @@ import { HomeMicDock } from '@/components/home-mic-dock';
 import { AvaTopBar, AvaCard, AvaLabel, AvaListRow, AvaButton, C, SERIF, SANS } from '@/components/ava';
 import { formatPriceFR, formatDateRelativeFR } from '@/lib/format';
 import { NotificationsBanner } from '@/components/notifications-banner';
+import { OnboardingWizard } from '@/components/onboarding-wizard';
 import { InstallHint } from '@/components/install-hint';
 
 export const dynamic = 'force-dynamic';
@@ -35,7 +36,7 @@ export default async function HomePage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, is_drom, vat_default, siret, company_name')
+    .select('full_name, is_drom, vat_default, siret, company_name, iban, bic, onboarding_completed_at, onboarding_dismissed_at')
     .eq('id', user.id)
     .maybeSingle();
 
@@ -44,6 +45,11 @@ export default async function HomePage() {
   // Onboarding completeness — SIRET + company name are the absolute minimum
   // for legal mentions on factures. Without them, the PDF is non-conforme.
   const profileIncomplete = !profile?.siret || !profile?.company_name;
+
+  // Show wizard on first visit when profile incomplete and never dismissed
+  const showWizard = profileIncomplete
+    && !profile?.onboarding_completed_at
+    && !profile?.onboarding_dismissed_at;
 
   const { data: recentInvoices } = await supabase
     .from('invoices')
@@ -338,6 +344,18 @@ export default async function HomePage() {
       </div>
 
       <HomeMicDock />
+
+      {showWizard && (
+        <OnboardingWizard
+          initialFullName={profile?.full_name ?? ''}
+          initialCompanyName={profile?.company_name ?? ''}
+          initialSiret={profile?.siret ?? ''}
+          initialIban={profile?.iban ?? ''}
+          initialBic={profile?.bic ?? ''}
+          initialIsDrom={profile?.is_drom ?? false}
+          email={user.email ?? ''}
+        />
+      )}
     </main>
   );
 }
