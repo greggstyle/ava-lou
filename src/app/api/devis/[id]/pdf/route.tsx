@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { InvoicePDF } from '@/lib/pdf/invoice-pdf';
 import type { Quote, Client, Profile } from '@/lib/types';
+import { verifyPublicId, publicUrlRequiresToken } from '@/lib/public-url';
 
 export const runtime = 'nodejs';
 export const maxDuration = 30;
@@ -12,11 +13,17 @@ export async function GET(req: NextRequest, ctx: { params: Promise<{ id: string 
   const { id } = await ctx.params;
   const url = new URL(req.url);
   const isPublic = url.searchParams.get('public') === '1';
+  const token = url.searchParams.get('t');
 
   let quote: (Quote & { clients: Partial<Client> | null }) | null = null;
   let profile: Partial<Profile> | null = null;
 
   if (isPublic) {
+    const verdict = verifyPublicId('devis', id, token);
+    if (verdict === 'invalid') return NextResponse.json({ error: 'Lien invalide' }, { status: 404 });
+    if (verdict === 'missing' && publicUrlRequiresToken()) {
+      return NextResponse.json({ error: 'Lien non signé' }, { status: 404 });
+    }
     const admin = createAdminClient();
     const { data: qData } = await admin
       .from('quotes')

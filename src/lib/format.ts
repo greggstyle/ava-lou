@@ -35,18 +35,36 @@ export interface LineItem {
   vat_rate: number;
 }
 
+/**
+ * Compute HT / TVA / TTC from a list of line items.
+ *
+ * **Per-line rounding** (French invoicing best practice). The previous version
+ * summed raw HT and VAT then rounded once at the end — which can produce a
+ * total that disagrees with what the artisan sees on the printed invoice
+ * (each line rounded to the cent in the body). When clients reconcile by
+ * adding the column themselves, a 1-cent mismatch erodes trust.
+ *
+ * We now round each line's HT and VAT to the cent before summing. The total
+ * TTC is the sum of rounded line TTCs, not (rounded HT) + (rounded VAT) — so
+ * if a single line totals 178.73 €, that's the total. Verified by the audit.
+ */
 export function computeTotals(lines: LineItem[]) {
   let ht = 0;
   let vat = 0;
+  let ttc = 0;
   for (const l of lines) {
-    const lineHt = l.qty * l.unit_price;
+    const lineHtRaw = l.qty * l.unit_price;
+    const lineHt = round2(lineHtRaw);
+    const lineVat = round2(lineHtRaw * (l.vat_rate / 100));
+    const lineTtc = round2(lineHt + lineVat);
     ht += lineHt;
-    vat += lineHt * (l.vat_rate / 100);
+    vat += lineVat;
+    ttc += lineTtc;
   }
   return {
     amount_ht: round2(ht),
     amount_vat: round2(vat),
-    amount_ttc: round2(ht + vat),
+    amount_ttc: round2(ttc),
   };
 }
 

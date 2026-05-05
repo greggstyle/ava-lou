@@ -7,15 +7,21 @@ import type { Client, Profile, Quote } from '@/lib/types';
 import { PrintButton } from '@/components/print-button';
 import { ShareButton } from '@/components/share-button';
 import { headers } from 'next/headers';
+import { buildPublicUrl, verifyPublicId, publicUrlRequiresToken, signPublicId } from '@/lib/public-url';
 
 export const dynamic = 'force-dynamic';
 
 interface PageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ t?: string }>;
 }
 
-export default async function VoirDevisPage({ params }: PageProps) {
+export default async function VoirDevisPage({ params, searchParams }: PageProps) {
   const { id } = await params;
+  const { t: token } = await searchParams;
+  const verdict = verifyPublicId('devis', id, token);
+  if (verdict === 'invalid') notFound();
+  if (verdict === 'missing' && publicUrlRequiresToken()) notFound();
   const supabase = createAdminClient();
 
   const { data: quote } = await supabase
@@ -35,7 +41,9 @@ export default async function VoirDevisPage({ params }: PageProps) {
   const h = await headers();
   const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'ava-lou.vercel.app';
   const proto = h.get('x-forwarded-proto') ?? 'https';
-  const publicUrl = `${proto}://${host}/voir/devis/${id}`;
+  const origin = `${proto}://${host}`;
+  const publicUrl = buildPublicUrl(origin, 'devis', id);
+  const pdfToken = signPublicId('devis', id);
   const clientObj = quote.clients as { name?: string | null; phone?: string | null } | null;
   const clientPhone = (quote as Quote & { clients?: { phone?: string | null } | null }).clients?.phone ?? null;
 
@@ -70,7 +78,7 @@ export default async function VoirDevisPage({ params }: PageProps) {
             clientName={clientObj?.name ?? null}
             clientPhone={clientPhone}
           />
-          <PrintButton pdfHref={`/api/devis/${id}/pdf?public=1`} />
+          <PrintButton pdfHref={pdfToken ? `/api/devis/${id}/pdf?public=1&t=${pdfToken}` : `/api/devis/${id}/pdf?public=1`} />
         </span>
       </header>
 
