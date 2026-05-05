@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { AvaTopBar, AvaCard, AvaLabel, AvaPill, C, SANS, SERIF, TNUM } from '@/components/ava';
 import { formatDateRelativeFR } from '@/lib/format';
 import { GenerateInsightsButton, DismissInsightButton } from '@/components/insights-actions';
+import { TtsButton } from '@/components/tts-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -111,8 +112,11 @@ export default async function InsightsPage() {
                                 <AvaPill kind="success" style={{ padding: '2px 8px', fontSize: 10 }}>Opportunité</AvaPill>
                               )}
                             </div>
-                            <div style={{ font: `500 17px/1.35 ${SERIF}`, color: C.ink, marginBottom: 8 }}>
-                              {insight.title}
+                            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 8 }}>
+                              <div style={{ font: `500 17px/1.35 ${SERIF}`, color: C.ink, flex: 1 }}>
+                                {insight.title}
+                              </div>
+                              <TtsButton text={`${insight.title}. ${insight.body}`} label="" />
                             </div>
                             <div style={{ font: `400 14px/1.55 ${SANS}`, color: C.ink2 }}>
                               {insight.body}
