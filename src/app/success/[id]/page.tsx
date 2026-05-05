@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { AvaButton, C, SERIF, SANS, TNUM } from '@/components/ava';
 import { formatPriceFR } from '@/lib/format';
 import { SuccessRedirect } from '@/components/success-redirect';
+import { TtsButton } from '@/components/tts-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -93,13 +94,16 @@ export default async function SuccessPage({ params, searchParams }: PageProps) {
         </svg>
       </div>
 
-      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 360 }}>
+      <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 360, alignItems: 'center' }}>
         <div style={{ font: `400 26px/1.25 ${SERIF}`, color: C.ink, letterSpacing: '-0.01em' }}>
           {title}
         </div>
         {amountStr && (
           <div style={{ font: `500 18px/1 ${SANS}`, color: C.ink2, ...TNUM }}>{amountStr}</div>
         )}
+        <div style={{ marginTop: 4 }}>
+          <TtsButton text={amountStr ? `${title} Total ${amountStr}.` : title} label="Écouter AVA" autoPlayOnce />
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', marginTop: 8 }}>
