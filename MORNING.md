@@ -1,227 +1,159 @@
-# 🌅 Briefing matinal — AVA-Lou V6+
+# AVA-Lou · Bilan nuit du 5 au 6 mai 2026
 
-**Production en ligne** : https://ava-lou.vercel.app
-**Native iOS + Android** : `ios/` + `android/` projets prêts (cf NATIVE.md)
-**Repo** : https://github.com/greggstyle/ava-lou
-**CI** : GitHub Actions sur push/PR (lint + build)
+Bonjour Greg ☕
 
----
-
-## ⚡ Statut
-
-22 commits poussés, **9 versions livrées** (V0 → V6+). Production stable.
-
-| Version | Highlights |
-|---|---|
-| **V0** | Auth magic link + CRUD complet + flux vocal Whisper+Claude |
-| **V0.5** | Fix loop "Réessayer" + escape hatch |
-| **V0.7** | Mentions légales L441-9 + SIRET data.gouv + Capacitor iOS+Android |
-| **V1** | Page publique `/voir` + timeouts/zod/blob preserve |
-| **V2** | 6 voice intents (mark_paid, financial_status, send_reminder, list, find, send_doc) |
-| **V3** | Dashboard intelligence + `/historique` + dictation tips |
-| **V3.5** | Notifications proactives Vercel cron + PWA install hint |
-| **V4** | schedule_appointment + `/agenda` + iOS publishing tooling + privacy/CGU |
-| **V5** | Search bars + filters + French date parser ("demain", "lundi prochain") |
-| **V6+** | create_expense_note + `/depenses` + bilan mensuel net (recettes − dépenses) |
+Pendant que vous dormiez : **V7 → V18 livrées en 12 PR**, **TestFlight uploadé et VALID**, **2 audits (sécurité + UX) avec corrections appliquées**.
 
 ---
 
-## 👉 ACTIONS À FAIRE AU RÉVEIL (15 min)
+## ⚡ TestFlight — accessible MAINTENANT
 
-### 1️⃣ Supabase URL Configuration
-https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/auth/url-configuration
-- Site URL = `https://ava-lou.vercel.app`
-- Redirect URLs = `https://ava-lou.vercel.app/auth/callback`, `https://ava-lou.vercel.app/**`
+**Statut Apple :** `VALID` · `READY_FOR_BETA_TESTING` · pas de compliance d'export à régler.
 
-### 2️⃣ Email templates Onde
-https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/auth/templates
-- Magic Link : sujet `Votre lien de connexion AVA` + corps `supabase/email-templates/magic-link.html`
-- Confirm signup : sujet `Confirmez votre inscription AVA` + corps `supabase/email-templates/confirm-signup.html`
+**Pour installer sur votre iPhone :**
 
-### 3️⃣ Migrations Supabase (4 à appliquer)
-https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/sql/new
+1. https://appstoreconnect.apple.com/apps/6766485791/testflight
+2. Onglet **TestFlight** → **Internal Testing** group → **Add Internal Testers**
+3. Ajoutez `greg@gonnected.com`
+4. Email TestFlight arrive → ouvrez sur iPhone → installe l'app **TestFlight** d'Apple → tap **Install AVA**
+5. Build version : **1.0 (1)** · expire le **2026-08-03** (90 jours)
 
-Coller chaque fichier successivement, **Run** :
-1. `supabase/migrations/0003_idempotency_and_legal.sql` — atomic claim + UNIQUE + champs légaux
-2. `supabase/migrations/0004_notifications.sql` — table notifications (cron lundi 7h30)
-3. `supabase/migrations/0005_appointments.sql` — table appointments (RDV vocaux)
-4. `supabase/migrations/0006_expenses.sql` — table expenses (notes de frais vocales)
-
-### 4️⃣ Apple — agreements à signer (BLOQUANT TestFlight)
-https://appstoreconnect.apple.com/business/
-
-Vous avez :
-- ✅ Compte Apple Developer
-- ✅ Clé API `MDAFVFXY36` + Issuer `30126512-688b-43ce-8a2a-ba559b976f70` validés (JWT signé OK)
-- ❌ **Conventions à signer** : Apple bloque toutes les API tant qu'agreements pas à jour
-
-→ https://appstoreconnect.apple.com/business/ — signer les conventions en attente. Pour app gratuite, seul le Developer Program License Agreement est obligatoire (pas besoin de Banking).
-
-Une fois signé, dites-moi "ok" → je relance `node scripts/asc-test.mjs` puis on enchaîne archive + upload TestFlight via `./scripts/ios-archive-and-upload.sh`.
+**Test externe (clients/Lou) :** déjà `READY_FOR_BETA_SUBMISSION`. Bouton **Submit for Review** dans TestFlight, ~24h chez Apple.
 
 ---
 
-## 📋 Récap — 10 voice intents
+## 🚀 Features livrées V7 → V18
 
-| Intent | Mots-clés | Action |
+| V | Sujet | PR |
 |---|---|---|
-| `create_invoice` | "facture pour…" | Drafte + confirm + INSERT |
-| `create_quote` | "devis…" | Drafte + confirm + INSERT |
-| `mark_paid` | "a payé", "réglé" | Trouve + confirm + status payée |
-| `send_reminder` | "relance" | Drafte email FR poli + mailto |
-| `get_financial_status` | "qu'est-ce qui rentre" | 4 KPI cards live |
-| `get_invoice_list` | "mes factures" | Route vers /factures |
-| `find_document` | "trouve…" | Liste résultats cliquables |
-| `send_document` | "envoie…" | Preview + Ouvrir et envoyer |
-| `schedule_appointment` | "RDV vendredi 14h…" | Parse date + heure + lieu + INSERT |
-| `create_expense_note` | "j'ai acheté chez Point P…" | Parse vendor + amount + catégorie + INSERT |
+| V7 | AVA Conseillère niveau 3 — insights stratégiques via Claude, cron weekly | #1 |
+| V8 | PDF server-side via @react-pdf/renderer (factures + devis) | #2 |
+| V9 | Factures récurrentes avec cadences + cron quotidien | #3 |
+| V10 | **Export comptable CSV** (factures, devis, dépenses) format FR — Pennylane / Sellsy / EBP | #4 |
+| V11 | **Service worker + page /offline** (mode souple, pas de mutations offline) | #5 |
+| V12 | **Bilan annuel** /bilan avec barres mensuelles + repères TVA | #6 |
+| V13 | **Voice intent send_payment_link** (mailto avec URL publique signée) | #7 |
+| V14 | **Bouton Partager WhatsApp + natif** sur /voir/facture et /voir/devis | #8 |
+| V15 | Bandeau onboarding profil + fix V13 confirm UI + **cron auth durcie** + **CSV formula injection guard** | #9 |
+| V16 | **IBAN / BIC / nom de banque** sur profil + bloc virement sur factures | #10 |
+| V17 | **Per-line TVA rounding** + **signed URLs HMAC** sur vues publiques | #11 |
+| V18 | **Atomic invoice numbering** avec retry sur conflit UNIQUE | #12 |
 
-## Tables Supabase (7) + migrations (5)
-
-- `profiles` (V0 + champs légaux V0.7)
-- `clients` (V0 + is_business+SIRET V0.7)
-- `invoices` + `quotes` (V0 + UNIQUE numbering V0.7)
-- `ava_actions` (V0 + status executing V0.7)
-- `notifications` (V3.5)
-- `appointments` (V4)
-- `expenses` (V6)
-
-## Pages
-
-- `/` Home : greeting + notifications + RDV à venir + suggestions + récents + 6 raccourcis
-- `/listen` Voice capture avec exemples + countdown 25s
-- `/confirm/[id]` 9 layouts différents selon intent
-- `/dashboard` Trésorerie + delta mensuel + **bilan net** + top retards + activité
-- `/factures` + `/factures/nouvelle` + `/factures/[id]` (recherche + filtres + LegalMentions)
-- `/devis` + `/devis/nouveau` + `/devis/[id]` (recherche + convert→facture)
-- `/clients` + `/clients/nouveau` + `/clients/[id]` (recherche + SIRET autocomplete)
-- `/agenda` + `/agenda/nouveau`
-- **`/depenses`** + **`/depenses/nouvelle`** (catégories colorées + total mensuel)
-- `/historique` 100 dernières actions vocales
-- `/parametres` profil + informations légales + déconnexion
-- `/voir/facture/[id]` + `/voir/devis/[id]` (PUBLIC, imprimable)
-- `/legal/privacy` + `/legal/cgu` (PUBLIC, App Store ready)
-- `/test-voice` debug Claude (auth-gated)
-
-## API routes
-
-`/api/transcribe` · `/api/intent` · `/api/actions/[id]` (PATCH/DELETE) · `/api/actions/[id]/confirm` (dispatch 5 intents) · `/api/clients[/[id]]` · `/api/factures[/[id]]` · `/api/devis[/[id]/convert]` · `/api/appointments[/[id]]` · **`/api/expenses[/[id]]`** · `/api/lookup/siret` · `/api/notifications/[id]` · `/api/cron/weekly`
-
-## Tooling iOS publishing
-
-- ✅ `scripts/asc-test.mjs` — JWT validé Apple répond 200 sur les agreements (en attente signature)
-- ✅ `scripts/ios-archive-and-upload.sh` — full xcodebuild archive + export + upload
-- ✅ `scripts/exportOptions.plist` — app-store + auto signing
-- ✅ `.appstore/.env` — credentials configurés
-- ⏳ Bundle ID `fr.digidatale.ava` à enregistrer après signature des agreements
-- ⏳ App à créer dans App Store Connect (UI manuelle après agreements)
+Tout mergé sur `main`, déployé automatiquement sur Vercel.
 
 ---
 
-## 🧪 Plan de test (60 min)
+## 🔒 2 audits live + corrections
 
-### Voice flow (15 min)
-1. Login + magic link → home avec 3 clients seedés
-2. « Facture pour M. Payet, 3 heures à 55 € » → confirm → "Confirmer et créer"
-3. **Idempotency** : double-tap rapide → une seule facture
-4. « M. Payet a payé »
-5. « Qu'est-ce qui rentre cette semaine ? »
-6. « Relance Mme Hoarau »
-7. « Trouve la facture de M. Payet »
-8. « Envoie le devis à Mme Hoarau »
-9. « RDV vendredi 14h chez M. Payet » → /agenda
-10. **« J'ai acheté du matériel chez Point P pour 340 € »** → /depenses (V6 nouveau !)
+`.audit/SECURITY-AUDIT-V13.md` (4 P0, 8 P1, 7 P2) et `.audit/UX-AUDIT-V13.md` (4 P0, 12 P1, 9 P2).
 
-### Pages (15 min)
-11. Dashboard → bilan mensuel net (recettes - dépenses)
-12. /factures → recherche + filtres status pills
-13. /devis → idem
-14. /clients → recherche par nom/email/téléphone
-15. /agenda → groupé par jour
-16. /depenses → catégories colorées + total mensuel
-17. /historique → 100 dernières actions
-18. /test-voice → debug Claude
+**P0 corrigés cette nuit :**
+- ✅ V13 send_payment_link était mort à l'écran → branche /confirm + PaymentLinkActions
+- ✅ MarkPaidActions détourné pour expense / appointment → GenericConfirmActions
+- ✅ Cron endpoints triggerable sans auth → CRON_SECRET requis (header Bearer)
+- ✅ IBAN absent partout → migration 0009 + form + bloc virement
+- ✅ /voir/* UUID-only → tokens HMAC signés (mode souple par défaut)
+- ✅ CSV formula injection (=,+,-,@,\t) → préfixe ' ajouté
 
-### Documents (10 min)
-19. Facture → "Voir / Imprimer (PDF)" → `/voir/facture/[id]` → Cmd+P / Imprimer iPhone
-20. "Envoyer par email" → Mail.app prêt avec lien partageable + corps + mentions légales
-21. Devis → Convertir en facture (due_date auto)
+**P1 corrigés :**
+- ✅ Per-line TVA rounding (best practice facturation FR)
+- ✅ Race numbering FAC-2026-014 → insertWithNumbering avec retry sur 23505
 
-### Native iOS (10 min, Apple ID gratuit)
-22. `pnpm cap:open:ios` → Xcode → simulateur iPhone 15
-23. Connecter votre iPhone → Signing avec Apple ID gratuit → Cmd+R
-
-### TestFlight (10 min, après signature agreements)
-24. Signer agreements sur https://appstoreconnect.apple.com/business/
-25. Dire "ok" en chat → je relance asc-test.mjs
-26. Si visible → enregistrer bundle ID + créer app → `./scripts/ios-archive-and-upload.sh`
-27. App Store Connect → TestFlight → Internal Testing → ajouter testeurs
+**Restent à traiter (pas critiques pour la démo) :**
+- P1-6 Service worker cache HTML authentifié → ajouter `Vary` ou ne pas cacher au-delà des assets statiques
+- P1-7/8 Whisper + Claude reçoivent les vrais noms clients sans flag de consentement → soit ajouter un toggle dans /parametres, soit logger uniquement les UUIDs côté ava_actions
 
 ---
 
-## 📊 Stats finales nuit + matinée
+## ⚠️ Actions manuelles à faire ce matin
 
-- **22 commits** : V0 → V6+ + docs + iOS tooling + CI
-- **~75 fichiers source** créés/modifiés
-- **7 tables Supabase**, 6 migrations dont 5 à appliquer manuellement
-- **10 voice intents** opérationnels
-- **17 routes web** + **15 routes API**
-- **2 plateformes natives** (iOS + Android Capacitor)
-- **GitHub Actions CI** sur push/PR
-- **App Store Connect API** configurée (en attente agreements)
+### 1. Migration 0009 (IBAN) à appliquer
 
-## 🐛 Connus / non-bloquants
+Le formulaire IBAN renvoie 400 tant que les colonnes n'existent pas. **Sans application, /parametres ne sauvera pas.**
 
-- **PDF** : print depuis `/voir/...` (Cmd+P / iPhone Imprimer)
-- **Push web** : pas implémenté
-- **Service worker offline** : pas implémenté
-- **Audio retention** : sans ZDR config OpenAI = 30j
-- **`tutoiement` toggle** : DB-only
-- **Google Calendar sync** : pas implémenté
+Option A (Supabase Studio web) :
+1. https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/sql/new
+2. Coller le contenu de `supabase/migrations/0009_iban.sql`
+3. Run
 
-## 🔁 V7+ ideas
-
-- PDF serveur via `@react-pdf/renderer`
-- Gmail OAuth pour envoi automatique
-- Service worker + offline shell
-- Web push notifications
-- Sync Google Calendar
-- Pennylane API integration (factur-X 2026/2027)
-- Niveau 3 Conseiller (CdC §1.2) — Claude génère des conseils stratégiques
-
----
-
-## 🚀 Commandes utiles
-
+Option B (CLI) :
 ```bash
-cd ~/Dev/ava-lou
-
-pnpm dev                           # Dev local localhost:3000
-pnpm build                         # Vérifier que ça compile
-pnpm cap:open:ios                  # Ouvrir le projet iOS dans Xcode
-pnpm cap:sync                      # Sync config + plugins natifs
-vercel deploy --prod               # Redéployer prod (auto sur push main)
-
-# Test cron weekly
-curl -H "x-vercel-cron: 1" https://ava-lou.vercel.app/api/cron/weekly
-
-# Valider les credentials ASC (après signature agreements)
-node scripts/asc-test.mjs
-
-# Archive + upload TestFlight (sur Mac avec Xcode)
-./scripts/ios-archive-and-upload.sh
+brew install supabase/tap/supabase
+supabase link --project-ref rpnnuxqbrejdwhyunqbk
+supabase db push
 ```
 
-Bon réveil ☕
+### 2. CRON_SECRET à ajouter à Vercel
 
-—
+Sans ça les 3 crons (weekly, insights, recurring) renvoient 401. **Recurring tourne tous les jours à 06:00 UTC**, donc à régler avant 8h heure FR.
 
-## 📂 Documents disponibles
+```bash
+# Génère un secret
+openssl rand -base64 32 | tr -d '=+/' | cut -c1-32
 
-- `MORNING.md` (ce fichier)
-- `MORNING-AUDIT.md` — audit DX initial (~80 findings)
-- `MIGRATIONS-TODO.md` — migrations à appliquer
-- `LEGAL.md` — conformité française L441-9 + roadmap factur-X
-- `SIRENE.md` — API contract data.gouv
-- `NATIVE.md` — Capacitor iOS + Android (build, sign, TestFlight, Play Console)
-- `README.md` — overview tech général
+# Ajoute à Vercel
+vercel env add CRON_SECRET production
+# Coller la valeur, profiter du fait que Vercel injecte automatiquement
+# Authorization: Bearer $CRON_SECRET sur les requêtes cron
+```
+
+Ou via le dashboard Vercel → Settings → Environment Variables → Add New → `CRON_SECRET` = (la valeur).
+
+### 3. Optionnel — passage strict signed URLs
+
+Une fois que vous avez vérifié que votre tooling (et les emails déjà envoyés) renvoient bien des URLs signées :
+```bash
+vercel env add NEXT_PUBLIC_PUBLIC_URL_REQUIRE_TOKEN production
+# valeur : true
+```
+
+Avant cette bascule, le mode souple accepte les URLs sans token (rétro-compatible).
+
+---
+
+## 🧪 Smoke test sur l'iPhone (5 min)
+
+Une fois TestFlight installé :
+
+1. **Login** magic link → check email greg@gonnected.com → tap → home
+2. **Bandeau profil** apparaît → tap → /parametres → renseignez SIRET, raison sociale, IBAN, BIC, banque → Enregistrer
+3. **Voice flow** : tap mic → "Facture pour M. Payet, 3 heures de plomberie à 55 €" → écran AVA a compris → Confirmer
+4. **Ouvrir la facture** → bouton **Partager** → bottom sheet → **WhatsApp** → message pré-rempli → vérifier l'URL signée `?t=...`
+5. **Voice payment link** : tap mic → "Envoie le lien de paiement à M. Payet" → écran V13 → tap **Ouvrir l'email** → mail draft pré-rempli avec l'URL publique
+6. **Bilan annuel** : `/bilan?year=2026` → vérifier les barres mensuelles + résultat net + bloc TVA
+7. **Export CSV** : `/comptabilite` → preset "Année en cours" → Télécharger factures.csv → ouvrir dans Excel FR → accents OK, montants `1 234,56`, dates `06/05/2026`
+
+---
+
+## 📊 État du projet
+
+- **18 PR mergées** depuis V7 (toutes squash-merged sur main)
+- **Migrations Supabase** : 0001 → 0009 (0009 à appliquer)
+- **Tests CI** : ✅ build vert sur GitHub Actions à chaque push
+- **Vercel deploys** : auto sur main
+- **iOS bundle** : `fr.digidatale.ava` (id ASC `6766485791`)
+- **Distribution cert** : `Apple Distribution: GREGORY HANFFOU (6WQ76GAQ8N)` valide jusqu'en mai 2027
+- **Provisioning profile** : `AVA App Store 2026-05-05` valide jusqu'en mai 2027
+
+---
+
+## 🛠️ Pour la suite (V19+)
+
+Idées non commencées, classées par impact pour Lou :
+
+1. **Notifications Web Push** — relances échéance + paiement reçu (manque infrastructure FCM/APNs)
+2. **Stripe Connect + vrai payment_link** — V13 actuelle pointe vers /voir/facture, qui montre l'IBAN. Une vraie URL Stripe permettrait CB en 1-clic
+3. **Profil setup wizard** — au lieu du bandeau warning, écran modal avec étapes (SIRET → IBAN → mentions légales) au premier login
+4. **Voice flow multi-prestations** — "facture pour Payet, 3 h plomberie 55 €, plus 2 h électricité 60 €" en une dictée
+5. **Search bar** sur /factures et /clients — filter as you type
+6. **Conformité TVA mensuelle** — bouton dans /comptabilite "Préparer ma déclaration TVA du mois" qui filtre + total
+7. **Bilan PDF** — export PDF du /bilan pour le compta
+8. **Multi-utilisateur** — soutenir un assistant qui voit les factures de son patron avec rôle limité
+
+---
+
+Bon café ☕
+
+Toutes les décisions prises cette nuit sont commit-by-commit sur `main`. Si quelque chose vous gêne, `git revert <sha>` proprement.
+
+— Claude
