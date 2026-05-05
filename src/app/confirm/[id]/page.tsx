@@ -21,6 +21,7 @@ import {
   GenericConfirmActions,
   PaymentLinkActions,
 } from '@/components/confirm-actions';
+import { TtsButton } from '@/components/tts-button';
 
 export const dynamic = 'force-dynamic';
 
@@ -134,7 +135,10 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 20, flex: 1 }}>
-          <AvaLabel>AVA a compris :</AvaLabel>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA a compris :</AvaLabel>
+            <TtsButton text={avaResponse} label="" />
+          </div>
           <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
           {ent.candidate_invoice_id ? (
             <AvaCard padding={16}>
@@ -270,7 +274,10 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-          <AvaLabel>AVA a compris :</AvaLabel>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA a compris :</AvaLabel>
+            <TtsButton text={avaResponse} label="" />
+          </div>
           <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
           <AvaCard padding={18}>
             <div style={{ font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2 }}>
@@ -309,7 +316,10 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-          <AvaLabel>AVA a compris :</AvaLabel>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA a compris :</AvaLabel>
+            <TtsButton text={avaResponse} label="" />
+          </div>
           <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
           <AvaCard padding={18}>
             <div style={{ font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2 }}>
@@ -396,7 +406,10 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
-          <AvaLabel>AVA prépare l&apos;envoi :</AvaLabel>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA prépare l&apos;envoi :</AvaLabel>
+            <TtsButton text={avaResponse} label="" />
+          </div>
           <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
           {r && (
             <a
@@ -518,7 +531,10 @@ export default async function ConfirmPage({ params }: PageProps) {
       <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
         {Header}
         <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 20, flex: 1 }}>
-          <AvaLabel>AVA a compris :</AvaLabel>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA a compris :</AvaLabel>
+            <TtsButton text={avaResponse} label="" />
+          </div>
           <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
           <div style={{ marginTop: 'auto' }}>
             <ReadOnlyActions actionId={id} primaryHref={href} primaryLabel="Voir mes factures" />
@@ -565,7 +581,10 @@ export default async function ConfirmPage({ params }: PageProps) {
     <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
       {Header}
       <div style={{ padding: '16px 20px 32px', display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <AvaLabel>AVA a compris :</AvaLabel>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA a compris :</AvaLabel>
+            <TtsButton text={avaResponse} label="" />
+          </div>
 
         <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
 
