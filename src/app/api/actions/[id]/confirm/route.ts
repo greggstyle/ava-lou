@@ -1,7 +1,33 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { computeTotals, nextDocumentNumber } from '@/lib/format';
+import { computeTotals } from '@/lib/format';
+import { insertWithNumbering } from '@/lib/numbering';
 import type { IntentEntities, LineItem } from '@/lib/types';
+
+/**
+ * Best vat_rate to record at the document level when line_items have mixed
+ * rates. Picks the rate that covers the most HT (so a small "déplacement"
+ * line doesn't dominate the headline rate). Each line keeps its own rate
+ * for the actual computation — this is just the document's headline rate
+ * displayed on the list page.
+ */
+function dominantVatRate(lines: LineItem[], fallback: number): number {
+  if (lines.length === 0) return fallback;
+  const buckets = new Map<number, number>();
+  for (const l of lines) {
+    const ht = l.qty * l.unit_price;
+    buckets.set(l.vat_rate, (buckets.get(l.vat_rate) ?? 0) + ht);
+  }
+  let best = lines[0].vat_rate;
+  let bestHt = -1;
+  for (const [rate, ht] of buckets) {
+    if (ht > bestHt) {
+      best = rate;
+      bestHt = ht;
+    }
+  }
+  return best;
+}
 
 export const runtime = 'nodejs';
 
@@ -149,24 +175,17 @@ export async function POST(
     const table = isInvoice ? 'invoices' : 'quotes';
     const prefix = isInvoice ? 'FAC' : 'DEV';
     const year = new Date().getFullYear();
+    const vatRate = dominantVatRate(lineItems, defaultVat);
 
-    // Count existing docs this year for numbering
-    const yearStart = `${year}-01-01`;
-    const { count } = await supabase
-      .from(table)
-      .select('id', { count: 'exact', head: true })
-      .eq('user_id', user.id)
-      .gte('created_at', yearStart);
-
-    const number = nextDocumentNumber(prefix, year, count ?? 0);
-    const vatRate = lineItems[0]?.vat_rate ?? defaultVat;
-
-    const { data: inserted, error: insertErr } = await supabase
-      .from(table)
-      .insert({
+    const { data: inserted, error: insertErr } = await insertWithNumbering<{ id: string }>({
+      supabase,
+      table,
+      prefix,
+      userId: user.id,
+      year,
+      payloadWithoutNumber: {
         user_id: user.id,
         client_id: clientId,
-        number,
         status: 'brouillon',
         vat_rate: vatRate,
         amount_ht: totals.amount_ht,
@@ -177,9 +196,9 @@ export async function POST(
         ...(isInvoice
           ? { due_date: entities.due_date ?? null }
           : { expiry_date: entities.due_date ?? null }),
-      })
-      .select('id')
-      .single();
+      },
+      selectColumns: 'id',
+    });
 
     if (insertErr || !inserted) {
       console.error('[confirm] insert error', insertErr);

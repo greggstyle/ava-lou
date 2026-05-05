@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { computeNextRunDate, computeRecurringAmounts, type RecurringTemplate } from '@/lib/recurring';
-import { nextDocumentNumber } from '@/lib/format';
+import { insertWithNumbering } from '@/lib/numbering';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60;
@@ -53,22 +53,18 @@ export async function GET(req: NextRequest) {
         continue;
       }
 
-      // Compute amounts and resolve invoice number
+      // Compute amounts; numbering is atomic via insertWithNumbering
       const { amount_ht, amount_vat, amount_ttc, line_items } = computeRecurringAmounts(template);
-      const { count } = await supabase
-        .from('invoices')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', template.user_id)
-        .like('number', `FAC-${year}-%`);
-      const number = nextDocumentNumber('FAC', year, count ?? 0);
 
-      // Insert invoice
-      const { error: insErr } = await supabase
-        .from('invoices')
-        .insert({
+      const { error: insErr } = await insertWithNumbering({
+        supabase,
+        table: 'invoices',
+        prefix: 'FAC',
+        userId: template.user_id,
+        year,
+        payloadWithoutNumber: {
           user_id: template.user_id,
           client_id: template.client_id,
-          number,
           status: 'brouillon',
           issue_date: todayIso,
           due_date: null,
@@ -78,7 +74,9 @@ export async function GET(req: NextRequest) {
           amount_ttc,
           line_items,
           notes: template.notes ? `Récurrent (${template.label}) — ${template.notes}` : `Récurrent (${template.label})`,
-        });
+        },
+        selectColumns: 'id',
+      });
       if (insErr) {
         errors.push(`template ${template.id}: ${insErr.message}`);
         continue;
