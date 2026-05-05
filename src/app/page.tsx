@@ -301,6 +301,12 @@ export default async function HomePage() {
               <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>CSV</div>
             </AvaCard>
           </Link>
+          <Link href="/bilan" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{ cursor: 'pointer' }}>
+              <AvaLabel>Bilan</AvaLabel>
+              <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Annuel</div>
+            </AvaCard>
+          </Link>
         </div>
 
         <div style={{ height: 200 }} />
