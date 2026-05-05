@@ -1,69 +1,25 @@
-# 🌅 Briefing matinal — AVA-Lou V3.5
+# 🌅 Briefing matinal — AVA-Lou V4+
 
 **Production en ligne** : https://ava-lou.vercel.app
-**Native** : `ios/` + `android/` projets prêts (voir NATIVE.md)
+**Native iOS + Android** : `ios/` + `android/` projets prêts (cf NATIVE.md)
 **Repo** : https://github.com/greggstyle/ava-lou
 
 ---
 
-## ✅ Tout ce qui a été livré cette nuit (V0 → V3.5)
+## ⚡ Statut au réveil
 
-### V0 — Fondations + flux vocal
-- Magic-link login + middleware auth
-- CRUD complet : Clients, Factures, Devis (numérotation auto FAC-2026-XXX)
-- Dashboard avec KPIs trésorerie
-- Paramètres profil (TVA, DROM, déconnexion)
-- Flux vocal : `/listen` → Whisper → Claude → `/confirm` → CRUD
-- 6 primitives Onde portées en TSX, fonts Instrument Serif + Inter Tight
-- PWA manifest + icônes
-- 3 clients démo seedés au premier login
+Tout est compilé, déployé, testable. **Production stable**.
 
-### V0.5 — Fixes du loop vocal
-- Bouton "Continuer en formulaire" sur faible confiance (plus de boucle dead-end)
-- Préremplissage `?action=ID` dans factures/devis nouveau
-- Prompt Claude assoupli (philosophie brouillon-d'abord)
-- Mic flottant global sur toutes les pages
-- Bouton "Envoyer par email" (mailto deep-link)
-- Templates emails Onde
-
-### Wave Native
-- **Capacitor iOS + Android** : projets natifs, manifests permissions micro, splash navy
-- NATIVE.md : workflow simulateur + Apple ID gratuit (7j) + TestFlight + Play Console
-
-### V0.7 — Conformité française + audit fixes
-- 5 fixes P0 audit (idempotency atomic claim, TVA DROM par défaut, mic tap-to-start, escape hatch, VAT 5,5%)
-- **Mentions légales art. L441-9** : composant `<LegalMentions />` sur factures + devis
-- **SIRET autocomplete** via recherche-entreprises.api.gouv.fr (data.gouv)
-- Email body legal : mailto inclut bloc mentions légales
-
-### V1 — Page publique + robustness
-- **Page publique `/voir/facture/[id]`** + **`/voir/devis/[id]`** : URL partageable, imprimable PDF par le client (lien dans le mailto)
-- Notes ne pollue plus la dictée brute (problème pro fixé)
-- Match client fuzzy `%name%` + reverse-substring (évite duplicats "Payet" vs "M. Payet")
-- Whisper 25s timeout + retry, Claude 20s timeout + retry, structured FR errors
-- JSON Claude validé par zod, fallback gracieux à `intent: unknown`
-- Whisper failure preserves blob (Renvoyer = re-POST same blob, pas re-record)
-- Polish : 30s countdown, status mapping FR, inputMode decimal, devis→facture due_date
-
-### V2 — Voice intents avancés
-- **`mark_paid`** : « M. Payet a payé » → trouve sa dernière facture impayée → confirme → status payée
-- **`get_financial_status`** : « Qu'est-ce qui rentre ? » → 4 KPI cards live (à encaisser, en retard, encaissé ce mois, devis en attente)
-- **`send_reminder`** : « Relance Mme Hoarau » → trouve impayés → drafte email poli → ouvre mailto
-- **`get_invoice_list`** : « Mes factures impayées » → route vers /factures
-- **`find_document`** : « Trouve la facture de M. Payet » → liste résultats cliquables
-- **`send_document`** : « Envoie le devis à M. Payet » → ouvre la fiche prête à envoyer
-
-### V3 — Dashboard + Historique
-- Dashboard upgrade : delta mois vs mois dernier (% ↑↓), top 5 clients en retard, activité récente
-- Page `/historique` : 100 dernières actions vocales avec status pills
-- Dictation tips sur `/listen` idle screen (5 exemples)
-
-### V3.5 — Notifications proactives (cron)
-- **Vercel cron lundi 7h30** : `/api/cron/weekly` scanne overdue + stale quotes
-- Insère une notification `weekly_recap` dans table `notifications`
-- Bannière "AVA vous suggère" sur la home avec bouton "Examiner" / "Plus tard"
-- CdC §1.2 niveau 2 (proactif) — atteint
-- **PWA install hint** sur la home (iOS-aware, dismissible, hidden if standalone)
+15 commits poussés cette nuit, sept versions livrées :
+- **V0** fondations (auth, CRUD, flux vocal Whisper+Claude)
+- **V0.5** fix loop "Réessayer"
+- **V0.7** conformité française (L441-9, SIRET data.gouv) + Capacitor
+- **V1** page publique `/voir` + robustness (timeouts, zod, blob preserve)
+- **V2** voice intents (mark_paid, financial_status, send_reminder, list, find, send_doc)
+- **V3** dashboard intelligence + historique + dictation tips
+- **V3.5** notifications proactives via cron + PWA install hint
+- **V4** schedule_appointment + /agenda + iOS publishing tooling + privacy/CGU
+- **V4+** appointments CRUD + manual /agenda/nouveau
 
 ---
 
@@ -75,29 +31,39 @@ https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/auth/url-configurati
 - **Redirect URLs** : `https://ava-lou.vercel.app/auth/callback`, `https://ava-lou.vercel.app/**`
 - **Save**
 
-### 2️⃣ Email templates Onde (Supabase)
+### 2️⃣ Email templates Onde
 https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/auth/templates
-- Magic Link : Subject `Votre lien de connexion AVA` + corps de `supabase/email-templates/magic-link.html`
-- Confirm signup : Subject `Confirmez votre inscription AVA` + corps de `supabase/email-templates/confirm-signup.html`
+- Magic Link : Subject `Votre lien de connexion AVA` + corps `supabase/email-templates/magic-link.html`
+- Confirm signup : Subject `Confirmez votre inscription AVA` + corps `supabase/email-templates/confirm-signup.html`
 
-### 3️⃣ Migrations 0003 + 0004 (BLOQUANT V0.7 + V3.5)
+### 3️⃣ Migrations Supabase (BLOQUANT V0.7 → V4+)
 https://supabase.com/dashboard/project/rpnnuxqbrejdwhyunqbk/sql/new
 
-Coller successivement (cf. MIGRATIONS-TODO.md) :
-1. `supabase/migrations/0003_idempotency_and_legal.sql` (idempotency + legal fields)
-2. `supabase/migrations/0004_notifications.sql` (table notifications)
+Coller successivement :
+1. `supabase/migrations/0003_idempotency_and_legal.sql` — idempotency + champs légaux
+2. `supabase/migrations/0004_notifications.sql` — table notifications
+3. `supabase/migrations/0005_appointments.sql` — table appointments
 
-Sans ces deux, ces features sont KO :
-- Double-tap crée 2 factures (0003)
-- Mentions légales / SIRET (0003)
-- Bannière proactive lundi matin (0004)
+Sans ces migrations :
+- 0003 KO : double-tap crée 2 factures, mentions légales / SIRET cassés
+- 0004 KO : bannière proactive lundi matin ne s'affichera pas
+- 0005 KO : voice "RDV vendredi 14h" + page /agenda HS
 
-### 4️⃣ TestFlight (vous m'avez dit que vous donneriez les accès demain)
-- Quand vous m'aurez donné votre Apple Developer + Bundle ID, je peux :
-  - Configurer signing automatique
-  - Archive + upload à App Store Connect
-  - Inviter testeurs
-- Sans Apple Developer, on peut tester via votre iPhone perso + Xcode signing gratuit (7 jours)
+### 4️⃣ TestFlight — il me manque l'**Issuer ID**
+Reçu de votre part : la clé `.p8` (Key ID `MDAFVFXY36`) — bien stockée localement, gitignored.
+**Manque** : l'Issuer ID
+→ https://appstoreconnect.apple.com/access/integrations/api
+→ En haut de la page, copiez la valeur sous "Issuer ID" (UUID format `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`)
+→ Collez-le dans `~/Dev/ava-lou/.appstore/.env` (copier d'abord depuis `.env.example`)
+
+Une fois en place, lancer :
+```bash
+cd ~/Dev/ava-lou
+cp .appstore/.env.example .appstore/.env
+# Éditer .appstore/.env, remplir ASC_ISSUER_ID + APPLE_TEAM_ID
+node scripts/asc-test.mjs   # validation des credentials
+./scripts/ios-archive-and-upload.sh   # archive + upload TestFlight (sur Mac avec Xcode)
+```
 
 ---
 
@@ -106,91 +72,176 @@ Sans ces deux, ces features sont KO :
 ### Web (https://ava-lou.vercel.app sur iPhone Safari)
 
 **Onboarding** :
-1. Login magic link → home avec greeting + 3 clients seedés
-2. PWA install hint visible en bas → click "Sur l'écran d'accueil"
-3. Settings → SIRET de votre entreprise → bouton "Vérifier" → auto-fill nom/adresse/NAF
+1. Login magic link → home avec greeting "Bonjour Lou" + 3 clients seedés
+2. PWA install hint → "Sur l'écran d'accueil"
+3. Settings → SIRET de votre entreprise → "Vérifier" → auto-fill nom/adresse/NAF/forme juridique
 
-**Voice flow magic** :
-4. Tap mic → "Touchez pour parler" → "Démarrer" (premier prompt iOS micro)
-5. Dire « Facture pour M. Payet, 3 heures à 55 € » → confirm screen avec total → "Confirmer et créer"
-6. **Test idempotency** : double-tap rapide sur "Confirmer" → une seule facture créée
-7. Sur la fiche facture créée → "Voir / Imprimer (PDF)" ouvre `/voir/facture/[id]` → Cmd+P → PDF
-8. "Envoyer par email" → ouvre Mail.app avec body complet + lien `/voir/...`
+**V0/V1 voice flow** :
+4. Tap mic FAB → "Touchez pour parler" → "Démarrer"
+5. Dire « Facture pour M. Payet, 3 heures à 55 € » → confirm → "Confirmer et créer"
+6. **Test idempotency** : double-tap rapide → une seule facture
+7. Sur la fiche → "Voir / Imprimer (PDF)" ouvre `/voir/facture/[id]` → Cmd+P sur Mac, "Sur l'écran d'accueil" → Imprimer sur iPhone
+8. "Envoyer par email" → Mail.app prêt avec lien partageable + corps complet + mentions légales
 
 **V2 voice intents** :
-9. Tap mic → « Qu'est-ce qui rentre cette semaine ? » → écran avec 4 KPI cards
-10. Tap mic → « M. Payet a payé » → confirm avec montant en gros → "Confirmer le paiement"
-11. Tap mic → « Relance Mme Hoarau » → écran avec draft email rédigé → "Ouvrir mon client mail"
-12. Tap mic → « Trouve la facture de M. Payet » → liste résultats
+9. « Qu'est-ce qui rentre cette semaine ? » → 4 KPI cards live
+10. « M. Payet a payé » → confirme → status payée
+11. « Relance Mme Hoarau » → écran avec draft email français → "Ouvrir mon client mail"
+12. « Trouve la facture de M. Payet » → liste résultats cliquables
+13. « Envoie le devis à Mme Hoarau » → preview → "Ouvrir et envoyer"
 
 **V3 dashboard** :
-13. `/dashboard` → voir top clients en retard + activité récente
-14. `/historique` → liste des actions vocales récentes
+14. `/dashboard` → top clients en retard + activité récente + delta mois vs mois dernier
+15. `/historique` → 100 dernières actions vocales
+16. `/test-voice` → outil debug Claude (paste any text, voir intent + confidence + latency)
 
-**Native iOS (10 min, Apple ID gratuit suffit)** :
-15. `pnpm cap:open:ios` → Xcode → simulateur
-16. Connecter votre iPhone → Signing avec Apple ID gratuit → Cmd+R → app installée
+**V4 agenda** :
+17. « RDV chantier vendredi 14h chez M. Payet » → confirme → /agenda
+18. `/agenda` voir RDV groupés par jour avec "Aujourd'hui" highlighted
+19. `/agenda/nouveau` → manual form fallback
+20. Home → section "Vos prochains RDV" si RDV à venir
+
+**Tests robustness** :
+21. Couper le wifi pendant l'enregistrement → erreur claire FR + "Renvoyer le même enregistrement"
+22. Dire « truc machin chose » (intent unknown) → escape hatches "Continuer en facture/devis" toujours visibles
+23. Privacy/CGU : `/legal/privacy` et `/legal/cgu` accessibles sans connexion
+
+### Native iOS (10 min, Apple ID gratuit suffit)
+24. `pnpm cap:open:ios` → Xcode → simulateur iPhone 15 Pro
+25. Connecter votre iPhone → Signing avec Apple ID gratuit → Cmd+R
+26. App installée — testez depuis l'app native (mêmes URLs, permission micro doit pop)
+
+### TestFlight (quand vous m'aurez donné l'Issuer ID)
+27. `./scripts/ios-archive-and-upload.sh` (sur votre Mac)
+28. Attendre 5-15 min → App Store Connect → TestFlight → Builds
+29. TestFlight → Internal Testing → ajouter testeurs → ils reçoivent un lien
 
 ---
 
-## 🐛 Connus / non-bloquants V3.5
+## 📋 Récapitulatif features livrées
 
-- **PDF** : seulement print depuis `/voir/...`, pas de génération serveur. Marche bien en démo iPhone Safari.
-- **Recherche listes** : pas de barre de recherche dans /factures, /devis, /clients. OK avec 3-5 démo clients.
-- **Optimistic UI statut** : 300-800 ms de flicker sur changement de statut.
-- **Audio retention OpenAI** : sans ZDR config, 30j chez OpenAI. À activer pour prod.
-- **Vercel cron** : tournera lundi 7h30 UTC en prod, mais nécessite migration 0004 appliquée pour insérer.
-- **`tutoiement` toggle** : écrit en base, ne change pas encore les labels UI (V4).
-- **Service worker offline** : pas implémenté en V3.5 (Next 16 + Capacitor remote-URL n'ont pas besoin).
+### Voice intents (9 total)
+| Intent | Mots-clés | Action |
+|---|---|---|
+| `create_invoice` | "facture pour…" | Drafte + confirm + INSERT |
+| `create_quote` | "devis…" | Drafte + confirm + INSERT |
+| `mark_paid` | "a payé", "réglé" | Trouve + confirm + status payée |
+| `send_reminder` | "relance" | Drafte email FR poli + mailto |
+| `get_financial_status` | "qu'est-ce qui rentre" | 4 KPI cards live |
+| `get_invoice_list` | "mes factures" | Route vers /factures |
+| `find_document` | "trouve…" | Liste résultats cliquables |
+| `send_document` | "envoie…" | Preview + Ouvrir et envoyer |
+| `schedule_appointment` | "RDV…" | Parse date + heure + lieu + INSERT |
+
+### Pages
+- **`/`** Home : greeting, notifications, RDV à venir, suggestions, récents, shortcuts
+- **`/listen`** Voice capture avec exemples + countdown 25s
+- **`/confirm/[id]`** 7 layouts différents selon intent
+- **`/dashboard`** Trésorerie + delta mensuel + top retards + activité
+- **`/factures`** + `/factures/nouvelle` + `/factures/[id]` (avec LegalMentions + mailto)
+- **`/devis`** + `/devis/nouveau` + `/devis/[id]` (avec convert-to-facture)
+- **`/clients`** + `/clients/nouveau` + `/clients/[id]` (avec SIRET autocomplete)
+- **`/agenda`** + `/agenda/nouveau`
+- **`/historique`** 100 dernières actions vocales
+- **`/parametres`** profil + informations légales + déconnexion
+- **`/voir/facture/[id]`** + **`/voir/devis/[id]`** (PUBLIC, imprimable PDF)
+- **`/legal/privacy`** + **`/legal/cgu`** (PUBLIC, App Store ready)
+- **`/test-voice`** debug Claude (admin only via auth)
+
+### API routes
+- `/api/transcribe` (Whisper avec timeouts + retry)
+- `/api/intent` (Claude + zod validation + intent enrichment)
+- `/api/actions/[id]/confirm` (atomic claim, dispatch par intent)
+- `/api/actions/[id]` (PATCH status, DELETE cancel)
+- `/api/clients` + `/api/clients/[id]`
+- `/api/factures` + `/api/factures/[id]`
+- `/api/devis` + `/api/devis/[id]` + `/api/devis/[id]/convert`
+- `/api/appointments` + `/api/appointments/[id]`
+- `/api/lookup/siret` (data.gouv autocomplete)
+- `/api/notifications/[id]` (mark read/dismissed)
+- `/api/cron/weekly` (Vercel cron lundi 7h30)
+
+### Migrations Supabase
+- 0001 : init (profiles, clients, invoices, quotes, ava_actions, RLS)
+- 0003 : idempotency + UNIQUE numbering + champs légaux profils + clients
+- 0004 : notifications
+- 0005 : appointments
+
+### Tooling iOS
+- `scripts/asc-test.mjs` : valide ASC API credentials + liste apps/bundles
+- `scripts/ios-archive-and-upload.sh` : archive + upload TestFlight automatisé
+- `scripts/exportOptions.plist` : config app-store + auto signing
+- `.appstore/.env.example` : template credentials
+- `.appstore/AuthKey_MDAFVFXY36.p8` : votre clé reçue, gitignored
 
 ---
 
-## 🔁 Si vous voulez itérer ensemble à 7h
+## 🐛 Connus / non-bloquants
 
-Priorités possibles pour V4 selon retours testeurs :
-1. **PDF serveur** via `@react-pdf/renderer` (2h, isolé) si l'aperçu print n'est pas assez propre
-2. **Gmail OAuth** pour envoi automatique (3-4h, nécessite Google Cloud Console)
-3. **Service worker** (offline shell + cache statique pour résilience chantier)
-4. **Recherche listes** (input client-side, ~30 min)
-5. **Notifications push web** (Web Push API + service worker)
-6. **Niveau 3 Conseiller** (CdC §1.2) — Claude génère des suggestions stratégiques sur base de l'historique
+- **PDF** : seulement print depuis `/voir/...`, pas de génération serveur (puppeteer trop lourd pour Vercel + Capacitor)
+- **Recherche listes** : pas de barre de recherche dans /factures, /devis, /clients (V5)
+- **Tutoiement toggle** : écrit en base mais n'affecte aucun label UI (V5)
+- **Audio retention OpenAI** : sans ZDR config, 30j chez OpenAI
+- **Service worker offline** : pas implémenté (Capacitor remote-URL ne le nécessite pas en V0)
+- **Web push** : pas implémenté (notifications restent in-app)
+- **Schedule appointment** : pas de Google Calendar sync (V5)
+
+---
+
+## 🔁 V5 idées si Lou redemande
+
+- PDF serveur via `@react-pdf/renderer` (rebuild de LegalMentions en composants react-pdf)
+- Gmail OAuth pour envoi automatique sans intervention
+- Service worker + offline shell
+- Recherche listes (input client-side)
+- Web push notifications
+- Sync Google Calendar pour appointments
+- Niveau 3 Conseiller (CdC §1.2) — Claude génère des suggestions stratégiques
+- Pennylane API integration pour facturation électronique conforme
 
 ---
 
 ## 📊 Stats finales nuit
 
-- **8 commits** : V0 → V0.5 → V0.7 → V1 → V2 → V3 → V3.5 + docs
-- **~40 fichiers source** créés/modifiés
-- **5 tables Supabase** : profiles, clients, invoices, quotes, ava_actions, notifications (V3.5)
-- **4 migrations** : 0001 init, 0003 idempotency+legal, 0004 notifications
-- **8 voice intents implémentés** : create_invoice, create_quote, mark_paid, send_reminder, get_financial_status, get_invoice_list, find_document, send_document
-- **2 routes natives** : iOS + Android via Capacitor
+- **15 commits** : V0 → V4+ + docs + iOS tooling
+- **~50 fichiers source** créés/modifiés
+- **6 tables Supabase** : profiles, clients, invoices, quotes, ava_actions, notifications, appointments
+- **5 migrations** : 0001 init, 0003 idempotency+legal, 0004 notifications, 0005 appointments
+- **9 voice intents** implémentés et routés
+- **35+ routes** Next.js (web app + API)
+- **2 plateformes natives** : iOS + Android via Capacitor
 
-## 📂 Documents à votre disposition
+## 📂 Documents disponibles
 
-- `MORNING.md` (ce fichier) — actions du matin et plan de test
-- `MORNING-AUDIT.md` — audit DX initial avec ~80 findings (réalisé en début de nuit)
+- `MORNING.md` (ce fichier) — actions matinales et plan de test
+- `MORNING-AUDIT.md` — audit DX initial avec ~80 findings
 - `MIGRATIONS-TODO.md` — migrations Supabase à appliquer
 - `LEGAL.md` — conformité française art. L441-9 + roadmap factur-X 2026/2027
 - `SIRENE.md` — API contract data.gouv autocomplete
 - `NATIVE.md` — Capacitor iOS + Android (build, sign, TestFlight, Play Console)
 - `README.md` — overview tech général
 
-Bonne testing session ☕
+Bon réveil et bons tests ☕
 
 —
 
-## Commandes utiles pour vous
+## 🚀 Commandes utiles
 
 ```bash
 # Dans ~/Dev/ava-lou
-pnpm dev                  # Dev local sur localhost:3000
-pnpm build                # Vérifier que ça compile
-pnpm cap:open:ios         # Ouvrir le projet iOS dans Xcode
-pnpm cap:open:android     # Ouvrir le projet Android dans Android Studio
-vercel deploy --prod      # Redéployer en prod (auto sur push main)
+pnpm dev                           # Dev local sur localhost:3000
+pnpm build                         # Vérifier que ça compile
+pnpm cap:open:ios                  # Ouvrir le projet iOS dans Xcode
+pnpm cap:open:android              # Ouvrir le projet Android
+pnpm cap:sync                      # Sync config + plugins natifs
+vercel deploy --prod               # Redéployer en prod (auto sur push main)
 
 # Tester la cron weekly manuellement
 curl -H "x-vercel-cron: 1" https://ava-lou.vercel.app/api/cron/weekly
-# (ou avec Authorization: Bearer $CRON_SECRET si vous l'avez défini)
+
+# Quand vous m'avez donné l'Issuer ID — valider l'auth ASC
+ASC_KEY_ID=MDAFVFXY36 \
+ASC_ISSUER_ID=<votre-issuer-id> \
+ASC_KEY_PATH=./.appstore/AuthKey_MDAFVFXY36.p8 \
+node scripts/asc-test.mjs
 ```
