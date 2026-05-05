@@ -2,8 +2,8 @@
 
 Bonjour Greg ☕
 
-Pendant que vous dormiez : **V7 → V35 livrées en 29 PR**. TestFlight uploadé et VALID.
-Deux audits (sécurité + UX) faits, P0 corrigés. **AVA parle, écoute, lit les tickets, génère des PDF, prépare la TVA, dupliquer une facture en 1 clic, et propose un Stripe link.**
+Pendant que vous dormiez : **V7 → V37 livrées en 30 PR**. TestFlight uploadé et VALID.
+Deux audits (sécurité + UX) faits, P0 corrigés. **AVA parle, écoute, lit les tickets, génère des PDF, prépare la TVA, duplique une facture en 1 clic, propose un Stripe link, résume la semaine à voix haute.**
 
 ---
 
@@ -37,6 +37,8 @@ Vous m'avez dit avoir ajouté votre compte ✅. L'email TestFlight devrait arriv
 | V33 | TTS auto-play sur l'écran de succès | #26 |
 | V34 | **Page `/relances` dédiée** + tile colorée accueil | #27 |
 | V35 | **Lien de paiement Stripe/SumUp/PayPal** sur profil | #28 |
+| V36 | **Voice intents `list_relances` + `get_weekly_summary`** (AVA résume la semaine à voix haute) | #29 |
+| V37 | TTS sur SmartGreeting accueil (bouton ▶ pour écouter le brief) | #30 |
 
 Tout mergé sur `main`, déployé automatiquement sur Vercel. **0 build cassé.**
 
@@ -133,12 +135,14 @@ Avant cette bascule, les URLs sans token sont acceptées (rétro-compatible avec
 9. **TVA mensuelle** : `/comptabilite` → carte "Pré-déclaration TVA mensuelle" → calcul direct par taux
 10. **/relances** : si Lou a une facture en retard, tile colorée sur l'accueil → tap → liste avec boutons "Relancer"
 11. **Lien de paiement Stripe** : aller dans `/parametres` → carte "Lien de paiement en ligne" → coller un lien (ex `https://buy.stripe.com/test`) → ouvrir une facture → "Envoyer par email" → vérifier que le mailto contient les 2 options
+12. **AVA résume ma semaine** (V36) : tap mic → "Résume ma semaine" → écran /confirm avec phrase complète + AVA la lit à voix haute automatiquement
+13. **Brief du jour** (V37) : sur l'accueil, tap le bouton ▶ à côté de "Bonne matinée, Lou" → AVA lit la phrase contextuelle
 
 ---
 
 ## 📊 État du projet
 
-- **29 PR mergées** depuis V7
+- **31 PR mergées** depuis V7
 - **Migrations Supabase** : 0001 → 0011 (3 nouvelles à appliquer : 0009, 0010, 0011)
 - **Tests CI** : ✅ build vert sur GitHub Actions
 - **Vercel deploys** : auto sur main
@@ -169,7 +173,7 @@ Si vous voulez continuer dans la même direction :
 
 ## 📈 Métriques de cette nuit
 
-- **29 commits** sur main (squash merge)
+- **31 commits** sur main (squash merge)
 - **0 régression** détectée par le build CI
 - **3 audits** d'agents lancés (sécurité, UX), résultats appliqués
 - **TestFlight** : 0 → uploaded → VALID en 1 nuit
