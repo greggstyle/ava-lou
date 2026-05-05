@@ -63,6 +63,19 @@ export default async function HomePage() {
     .order('created_at', { ascending: false })
     .limit(5);
 
+  // Today's appointments + next 24h
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const tomorrowEnd = new Date(todayStart.getTime() + 48 * 60 * 60 * 1000);
+  const { data: upcomingAppointments } = await supabase
+    .from('appointments')
+    .select('id, title, starts_at, location, status, clients(name)')
+    .gte('starts_at', todayStart.toISOString())
+    .lt('starts_at', tomorrowEnd.toISOString())
+    .neq('status', 'annulé')
+    .order('starts_at', { ascending: true })
+    .limit(5);
+
   return (
     <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AvaTopBar
@@ -96,6 +109,50 @@ export default async function HomePage() {
         )}
 
         <InstallHint />
+
+        {upcomingAppointments && upcomingAppointments.length > 0 && (
+          <div style={{ marginTop: 24 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <AvaLabel>Vos prochains RDV</AvaLabel>
+              <Link href="/agenda" style={{ font: `500 12px/1 ${SANS}`, color: C.muted, textDecoration: 'none' }}>
+                Tout voir →
+              </Link>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {upcomingAppointments.map((apt) => {
+                const start = new Date(apt.starts_at);
+                const isToday = start.toDateString() === new Date().toDateString();
+                const dayLabel = isToday ? "Aujourd'hui" : start.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
+                const timeLabel = start.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                const clientName = (apt.clients as unknown as { name: string } | null)?.name;
+                return (
+                  <AvaCard key={apt.id} padding={14}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ font: `500 11px/1 ${SANS}`, color: isToday ? C.green : C.muted, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+                          {dayLabel} · {timeLabel}
+                        </div>
+                        <div style={{ font: `500 15px/1.3 ${SANS}`, color: C.ink, marginTop: 4 }}>
+                          {apt.title}
+                        </div>
+                        {clientName && apt.title.indexOf(clientName) === -1 && (
+                          <div style={{ font: `400 12px/1.3 ${SANS}`, color: C.muted, marginTop: 2 }}>
+                            {clientName}
+                          </div>
+                        )}
+                        {apt.location && (
+                          <div style={{ font: `400 12px/1.3 ${SANS}`, color: C.muted, marginTop: 2 }}>
+                            {apt.location}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </AvaCard>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {openSuggestion && (
           <div style={{ marginTop: 24 }}>
@@ -146,7 +203,7 @@ export default async function HomePage() {
           )}
         </div>
 
-        <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+        <div style={{ marginTop: 24, display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
           <Link href="/factures" style={{ textDecoration: 'none' }}>
             <AvaCard padding={14} style={{ cursor: 'pointer' }}>
               <AvaLabel>Factures</AvaLabel>
@@ -163,6 +220,12 @@ export default async function HomePage() {
             <AvaCard padding={14} style={{ cursor: 'pointer' }}>
               <AvaLabel>Clients</AvaLabel>
               <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Voir tout</div>
+            </AvaCard>
+          </Link>
+          <Link href="/agenda" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{ cursor: 'pointer' }}>
+              <AvaLabel>Agenda</AvaLabel>
+              <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>RDV</div>
             </AvaCard>
           </Link>
         </div>
