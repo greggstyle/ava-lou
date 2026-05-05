@@ -1,5 +1,6 @@
 import { AvaCard, C, SANS, SERIF } from '@/components/ava';
 import { formatPriceFR } from '@/lib/format';
+import { TtsButton } from '@/components/tts-button';
 
 interface SmartGreetingProps {
   greeting: string;
@@ -107,10 +108,15 @@ export function SmartGreeting({
 
   const accent = top.kind === 'urgent' ? C.warn : top.kind === 'good' ? C.green : C.muted;
 
+  const fullText = `${salutation}, ${greeting}. ${top.text}`;
+
   return (
     <AvaCard padding={14} style={{ marginTop: 12, background: C.paper, border: `1px solid ${C.line}` }}>
-      <div style={{ font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2, marginBottom: 6 }}>
-        {salutation}, {greeting}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <div style={{ font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+          {salutation}, {greeting}
+        </div>
+        <TtsButton text={fullText} label="" />
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
         <div style={{ width: 6, height: 6, marginTop: 8, borderRadius: 3, background: accent, flexShrink: 0 }} />
