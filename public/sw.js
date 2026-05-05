@@ -3,18 +3,20 @@
  *
  * Strategy:
  *   - Static assets (/icons/*, /fonts/*, /assets/*, /_next/static/*) → cache-first
- *   - Navigation requests (HTML) → network-first, fallback to /offline
+ *   - Navigation requests (HTML) → network-only with /offline fallback
+ *     (NEVER cache authenticated HTML pages — see security note below)
  *   - API routes (/api/*) → never cached, never intercepted (always live network)
  *   - Voice POSTs and form submits → bypassed entirely
  *
- * No offline mutations. The artisan must be online to create / send / confirm —
- * we don't want a draft invoice queued for hours and then conflicting at sync.
- * Offline = read previously-loaded pages + see a friendly "hors-ligne" screen.
+ * SECURITY (audit P1-6): we previously cached authenticated HTML pages by URL.
+ * If user A logged out and user B logged in on the same device, B could see A's
+ * cached pages briefly. Now navigation requests are always network-only — we
+ * lose the "see last-loaded pages while offline" niceness, but we keep the
+ * per-user data boundary correct. Offline now means: friendly /offline screen.
  */
 
-const VERSION = 'ava-v1';
+const VERSION = 'ava-v2';
 const STATIC_CACHE = `${VERSION}-static`;
-const PAGES_CACHE = `${VERSION}-pages`;
 const OFFLINE_URL = '/offline';
 
 const PRECACHE = [
@@ -78,18 +80,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Navigation: network-first, fallback to cached page or offline shell
+  // Navigation: network-only with offline fallback. NEVER cache HTML — pages
+  // can contain user-specific data (client lists, invoices) that must not
+  // leak across login sessions on the same device.
   if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
     event.respondWith(
-      fetch(request)
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(PAGES_CACHE).then((c) => c.put(request, copy));
-          return res;
-        })
-        .catch(() =>
-          caches.match(request).then((cached) => cached || caches.match(OFFLINE_URL))
-        )
+      fetch(request).catch(() => caches.match(OFFLINE_URL))
     );
     return;
   }
