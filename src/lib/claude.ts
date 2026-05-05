@@ -26,6 +26,8 @@ INTENTIONS RECONNUES :
 - create_expense_note : enregistrer une dépense / note de frais ("j'ai acheté", "j'ai payé chez", "achat de matériel", "facture fournisseur")
 - get_insights : consulter les conseils stratégiques d'AVA ("qu'est-ce que tu vois", "tes conseils", "tes insights", "qu'est-ce qu'il faut surveiller", "donne-moi des recommandations")
 - send_payment_link : envoyer un lien de paiement à un client pour une facture impayée ("envoie le lien de paiement", "envoie le lien à payer", "lien Stripe", "facilite le paiement", "rends le règlement plus facile")
+- list_relances : afficher la liste des factures à relancer (en retard ou échéance proche). Mots-clés : "mes relances", "qui me doit de l'argent", "factures à relancer", "qu'est-ce qu'il faut relancer".
+- get_weekly_summary : résumé hebdomadaire de l'activité (encaissé, dépenses, devis, RDV). Mots-clés : "résume ma semaine", "récap de la semaine", "comment va l'activité", "bilan de la semaine".
 - unknown : la phrase ne contient aucun mot-clé identifiable
 
 FORMAT DE RÉPONSE OBLIGATOIRE :
@@ -50,6 +52,7 @@ RÈGLES — PHILOSOPHIE "BROUILLON D'ABORD" :
 15. Reconnais "vendredi/lundi/mardi prochain" → calculer la date ISO si possible, sinon mettre la mention en notes.
 16. Pour create_expense_note : extraire amount_total (montant), client_name (= fournisseur, ex "Point P", "Leroy Merlin"), line_items[0].label = nature ("matériel", "essence", "outillage"). Mots-clés : "j'ai acheté", "j'ai payé", "achat", "dépense", "frais", "facture fournisseur", "ticket".
 17. Pour send_payment_link : extraire client_name (à qui envoyer le lien), laisser le reste vide. Mots-clés : "lien de paiement", "lien à payer", "lien Stripe", "facilite le paiement", "envoie le lien".
+18. Pour list_relances et get_weekly_summary : laisser entities vide, pas de client. Renvoie ava_response dans le ton ("Voici vos relances." / "Voici votre semaine.").
 
 EXEMPLES (tu retournes UNIQUEMENT le JSON, ces exemples sont pour la calibration) :
 
@@ -82,6 +85,12 @@ Phrase : "Donne-moi tes recommandations"
 
 Phrase : "Envoie le lien de paiement à Monsieur Payet"
 {"intent":"send_payment_link","entities":{"client_name":"M. Payet","client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.9,"ava_response":"Lien de paiement préparé pour M. Payet."}
+
+Phrase : "Mes relances"
+{"intent":"list_relances","entities":{"client_name":null,"client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.9,"ava_response":"Voici vos relances."}
+
+Phrase : "Résume ma semaine"
+{"intent":"get_weekly_summary","entities":{"client_name":null,"client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.92,"ava_response":"Voici votre semaine."}
 
 Phrase : "Facture pour Madame Hoarau, 3 heures de plomberie à 55 euros plus pose carrelage 200 euros TVA 8,5"
 {"intent":"create_invoice","entities":{"client_name":"Mme Hoarau","client_email":null,"amount_total":null,"line_items":[{"label":"Plomberie","qty":3,"unit_price":55,"vat_rate":8.5},{"label":"Pose carrelage","qty":1,"unit_price":200,"vat_rate":8.5}],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.9,"ava_response":"Facture pour Mme Hoarau : plomberie 165 € + pose carrelage 200 €, TVA 8,5%, total 396,03 € TTC."}
@@ -117,7 +126,7 @@ const VALID_INTENTS = [
   'create_invoice', 'create_quote', 'send_reminder', 'get_financial_status',
   'get_invoice_list', 'mark_paid', 'schedule_appointment', 'send_document',
   'find_document', 'sign_document', 'create_expense_note', 'get_insights',
-  'send_payment_link', 'unknown',
+  'send_payment_link', 'list_relances', 'get_weekly_summary', 'unknown',
 ] as const;
 
 const IntentResultSchema = z.object({
