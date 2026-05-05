@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import { computeTotals, nextDocumentNumber } from '@/lib/format';
+import { computeTotals } from '@/lib/format';
+import { insertWithNumbering } from '@/lib/numbering';
 
 const LineItemSchema = z.object({
   label: z.string().min(1),
@@ -57,18 +58,10 @@ export async function POST(request: Request) {
   const totals = computeTotals(lineItems);
 
   const year = new Date(parsed.data.issue_date).getFullYear() || new Date().getFullYear();
-  const { count } = await supabase
-    .from('invoices')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .like('number', `FAC-${year}-%`);
 
-  const number = nextDocumentNumber('FAC', year, count ?? 0);
-
-  const insertPayload = {
+  const payloadWithoutNumber = {
     user_id: user.id,
     client_id: parsed.data.client_id ?? null,
-    number,
     status: 'brouillon' as const,
     issue_date: parsed.data.issue_date,
     due_date: parsed.data.due_date && parsed.data.due_date !== '' ? parsed.data.due_date : null,
@@ -80,12 +73,15 @@ export async function POST(request: Request) {
     notes: parsed.data.notes && parsed.data.notes !== '' ? parsed.data.notes : null,
   };
 
-  const { data, error } = await supabase
-    .from('invoices')
-    .insert(insertPayload)
-    .select()
-    .single();
+  const { data, error } = await insertWithNumbering({
+    supabase,
+    table: 'invoices',
+    prefix: 'FAC',
+    userId: user.id,
+    year,
+    payloadWithoutNumber,
+  });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 400 });
+  if (error || !data) return NextResponse.json({ error: error?.message ?? 'insert failed' }, { status: 400 });
   return NextResponse.json(data);
 }

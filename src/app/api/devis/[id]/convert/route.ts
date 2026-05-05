@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { nextDocumentNumber } from '@/lib/format';
+import { insertWithNumbering } from '@/lib/numbering';
 
 export async function POST(_req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
@@ -32,20 +32,15 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
     .toISOString().slice(0, 10);
   const year = today.getFullYear();
 
-  const { count } = await supabase
-    .from('invoices')
-    .select('id', { count: 'exact', head: true })
-    .eq('user_id', user.id)
-    .like('number', `FAC-${year}-%`);
-
-  const number = nextDocumentNumber('FAC', year, count ?? 0);
-
-  const { data: invoice, error: insErr } = await supabase
-    .from('invoices')
-    .insert({
+  const { data: invoice, error: insErr } = await insertWithNumbering({
+    supabase,
+    table: 'invoices',
+    prefix: 'FAC',
+    userId: user.id,
+    year,
+    payloadWithoutNumber: {
       user_id: user.id,
       client_id: quote.client_id,
-      number,
       status: 'brouillon',
       issue_date: issueDate,
       due_date: dueDate,
@@ -55,10 +50,9 @@ export async function POST(_req: Request, ctx: { params: Promise<{ id: string }>
       amount_ttc: quote.amount_ttc,
       line_items: quote.line_items,
       notes: quote.notes,
-    })
-    .select()
-    .single();
+    },
+  });
 
-  if (insErr) return NextResponse.json({ error: insErr.message }, { status: 400 });
+  if (insErr || !invoice) return NextResponse.json({ error: insErr?.message ?? 'insert failed' }, { status: 400 });
   return NextResponse.json(invoice);
 }
