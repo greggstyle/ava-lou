@@ -81,10 +81,15 @@ export function TtsButton({ text, label = 'Écouter AVA', autoPlayOnce = false }
 
   // Auto-play once per session, if requested. Hashing text approximates
   // "have we heard this exact line before" without persisting full text.
+  // Skipped entirely if user has disabled TTS via the settings preference.
   React.useEffect(() => {
     if (!autoPlayOnce || triggeredAutoPlay.current) return;
     triggeredAutoPlay.current = true;
     if (typeof sessionStorage === 'undefined') return;
+    // Respect user pref (set in /parametres)
+    try {
+      if (localStorage.getItem('ava-tts-autoplay') === 'off') return;
+    } catch { /* ignore */ }
     let hash = 0;
     for (let i = 0; i < text.length; i++) hash = (hash * 31 + text.charCodeAt(i)) | 0;
     const key = `tts-played-${hash}`;

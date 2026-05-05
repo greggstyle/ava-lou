@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { AvaButton, AvaCard, AvaField, AvaLabel, C, SANS, SERIF } from '@/components/ava';
 import type { LegalForm } from '@/lib/types';
+import { TtsPrefToggle } from '@/components/tts-pref-toggle';
 
 export interface ProfileForm {
   full_name: string;
@@ -201,6 +202,7 @@ export function SettingsForm({ initialProfile }: { initialProfile: ProfileForm }
               style={{ width: 18, height: 18 }} />
             <span style={{ font: `500 14px/1.3 ${SANS}`, color: C.ink }}>AVA me tutoie</span>
           </label>
+          <TtsPrefToggle />
         </div>
       </AvaCard>
 
