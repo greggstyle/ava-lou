@@ -67,6 +67,8 @@ export default async function ConfirmPage({ params }: PageProps) {
   const isExpense = intent === 'create_expense_note';
   const isInsights = intent === 'get_insights';
   const isPaymentLink = intent === 'send_payment_link';
+  const isListRelances = intent === 'list_relances';
+  const isWeeklySummary = intent === 'get_weekly_summary';
 
   type EnrichedEntities = Partial<IntentEntities> & {
     candidate_invoice_id?: string;
@@ -508,6 +510,50 @@ export default async function ConfirmPage({ params }: PageProps) {
           ) : null}
           <div style={{ marginTop: 'auto' }}>
             <ReadOnlyActions actionId={id} primaryHref="/" primaryLabel="Retour à l'accueil" />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ─── list_relances ─────────────────────────────────────────
+  if (isListRelances) {
+    return (
+      <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
+        {Header}
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>AVA a compris :</AvaLabel>
+            <TtsButton text={avaResponse} label="" autoPlayOnce />
+          </div>
+          <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
+          <div style={{ font: `400 14px/1.55 ${SANS}`, color: C.ink2 }}>
+            La page Relances liste vos factures en retard et celles dont l&apos;échéance approche, avec un bouton pour préparer un email pré-rempli en 1 tap.
+          </div>
+          <div style={{ marginTop: 'auto' }}>
+            <ReadOnlyActions actionId={id} primaryHref="/relances" primaryLabel="Voir mes relances" />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ─── get_weekly_summary ────────────────────────────────────
+  if (isWeeklySummary) {
+    return (
+      <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
+        {Header}
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <AvaLabel>Votre semaine :</AvaLabel>
+            <TtsButton text={avaResponse} label="" autoPlayOnce />
+          </div>
+          <div style={{ font: `400 20px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
+          <div style={{ font: `400 13px/1.5 ${SANS}`, color: C.muted }}>
+            Pour le détail mois par mois, ouvrez le bilan annuel.
+          </div>
+          <div style={{ marginTop: 'auto' }}>
+            <ReadOnlyActions actionId={id} primaryHref="/bilan" primaryLabel="Voir mon bilan" />
           </div>
         </div>
       </main>

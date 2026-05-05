@@ -160,6 +160,8 @@ export type AvaIntent =
   | 'create_expense_note'
   | 'get_insights'
   | 'send_payment_link'
+  | 'list_relances'
+  | 'get_weekly_summary'
   | 'unknown';
 
 export interface IntentEntities {

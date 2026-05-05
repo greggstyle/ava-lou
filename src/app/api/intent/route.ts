@@ -108,6 +108,13 @@ export async function POST(req: Request) {
         const enriched = await enrichForPaymentLink(supabase, user.id, result);
         entities = enriched.entities;
         ava_response = enriched.ava_response;
+      } else if (result.intent === 'list_relances') {
+        ava_response = "Voici vos relances.";
+      } else if (result.intent === 'get_weekly_summary') {
+        const { enrichForWeeklySummary } = await import('@/lib/intent-enrich');
+        const enriched = await enrichForWeeklySummary(supabase, user.id, result);
+        entities = enriched.entities;
+        ava_response = enriched.ava_response;
       }
     } catch (enrichErr) {
       console.warn('[intent] enrichment failed:', enrichErr);

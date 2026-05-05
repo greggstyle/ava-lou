@@ -875,3 +875,86 @@ export async function enrichForPaymentLink(
 
   return { entities, ava_response: ava_text };
 }
+
+/**
+ * Weekly summary — "Résume ma semaine" / "Bilan de la semaine".
+ * Computes the last 7 days of activity into a natural-language sentence
+ * AVA can read aloud via TTS.
+ */
+export async function enrichForWeeklySummary(
+  supabase: SupabaseClient,
+  userId: string,
+  result: IntentResult,
+): Promise<EnrichResult> {
+  const entities: EnrichedEntities = { ...result.entities };
+
+  const today = new Date();
+  const weekStart = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const weekStartIso = weekStart.toISOString().slice(0, 10);
+  const todayIso = today.toISOString().slice(0, 10);
+
+  const [{ data: paidInv }, { data: emittedInv }, { data: expenses }, { data: quotes }, { data: appointments }] = await Promise.all([
+    supabase.from('invoices').select('amount_ttc').eq('user_id', userId).eq('status', 'payée').gte('issue_date', weekStartIso).lte('issue_date', todayIso),
+    supabase.from('invoices').select('amount_ttc').eq('user_id', userId).gte('issue_date', weekStartIso).lte('issue_date', todayIso),
+    supabase.from('expenses').select('amount_ttc').eq('user_id', userId).gte('expense_date', weekStartIso).lte('expense_date', todayIso),
+    supabase.from('quotes').select('status').eq('user_id', userId).gte('issue_date', weekStartIso).lte('issue_date', todayIso),
+    supabase.from('appointments').select('id').eq('user_id', userId).gte('starts_at', `${weekStartIso}T00:00:00Z`).lte('starts_at', `${todayIso}T23:59:59Z`).neq('status', 'annulé'),
+  ]);
+
+  const sumTtc = (rows: Array<{ amount_ttc: number | string }> | null) =>
+    (rows ?? []).reduce((s, r) => s + Number(r.amount_ttc), 0);
+
+  const paidTotal = sumTtc(paidInv);
+  const paidCount = (paidInv ?? []).length;
+  const emittedCount = (emittedInv ?? []).length;
+  const expensesTotal = sumTtc(expenses);
+  const expensesCount = (expenses ?? []).length;
+  const quotesEmitted = (quotes ?? []).length;
+  const quotesAccepted = (quotes ?? []).filter((q) => q.status === 'accepté').length;
+  const rdvCount = (appointments ?? []).length;
+
+  // Build natural French sentence — short enough that TTS lecture < 12s
+  const parts: string[] = [];
+  if (paidCount > 0) {
+    parts.push(`${formatPriceFR(paidTotal)} encaissé${paidCount > 1 ? 's' : ''} sur ${paidCount} facture${paidCount > 1 ? 's' : ''}`);
+  } else {
+    parts.push('aucune facture payée');
+  }
+  if (emittedCount > paidCount) {
+    parts.push(`${emittedCount} facture${emittedCount > 1 ? 's' : ''} émise${emittedCount > 1 ? 's' : ''}`);
+  }
+  if (quotesEmitted > 0) {
+    parts.push(`${quotesEmitted} devis envoyé${quotesEmitted > 1 ? 's' : ''}${quotesAccepted > 0 ? ` (${quotesAccepted} accepté${quotesAccepted > 1 ? 's' : ''})` : ''}`);
+  }
+  if (expensesCount > 0) {
+    parts.push(`${formatPriceFR(expensesTotal)} de dépenses sur ${expensesCount} ticket${expensesCount > 1 ? 's' : ''}`);
+  }
+  if (rdvCount > 0) {
+    parts.push(`${rdvCount} rendez-vous`);
+  }
+
+  const sentence = parts.length === 0
+    ? 'Cette semaine, aucune activité enregistrée. Vous étiez en pause ?'
+    : `Cette semaine : ${parts.join(', ')}.`;
+
+  const balance = paidTotal - expensesTotal;
+  const balanceLine = balance >= 0
+    ? ` Solde net positif : ${formatPriceFR(balance)}.`
+    : ` Solde net négatif : ${formatPriceFR(Math.abs(balance))}.`;
+
+  return {
+    entities: {
+      ...entities,
+      summary: {
+        unpaid_total: 0,
+        unpaid_count: 0,
+        overdue_total: 0,
+        overdue_count: 0,
+        paid_this_month_total: paidTotal,
+        paid_this_month_count: paidCount,
+        pending_quotes_count: quotesEmitted,
+      },
+    },
+    ava_response: sentence + balanceLine,
+  };
+}
