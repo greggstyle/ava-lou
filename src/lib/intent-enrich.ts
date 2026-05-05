@@ -806,10 +806,12 @@ export async function enrichForPaymentLink(
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, company_name')
+    .select('full_name, company_name, payment_link_url, payment_link_provider')
     .eq('id', userId)
     .maybeSingle();
   const sender = profile?.company_name || profile?.full_name || 'votre prestataire';
+  const stripeLikeUrl = profile?.payment_link_url ?? null;
+  const stripeLikeProvider = profile?.payment_link_provider ?? null;
 
   // Public URL — read from env at request time (Vercel sets NEXT_PUBLIC_SITE_URL)
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://ava-lou.vercel.app';
@@ -817,25 +819,36 @@ export async function enrichForPaymentLink(
   const publicUrl = buildPublicUrl(baseUrl, 'facture', inv.id);
 
   const subject = `Lien de paiement — facture ${inv.number ?? ''}`.trim();
-  const body = [
+  const bodyLines = [
     `Bonjour ${client.name},`,
     '',
-    `Pour vous simplifier le règlement de la facture ${inv.number ?? ''} d'un montant de ${formatPriceFR(Number(inv.amount_ttc))}, voici le lien direct :`,
+    `Pour vous simplifier le règlement de la facture ${inv.number ?? ''} d'un montant de ${formatPriceFR(Number(inv.amount_ttc))}, voici les options :`,
     '',
-    publicUrl,
-    '',
-    'Vous y trouverez le détail de la prestation, l\'IBAN pour virement et toutes les mentions obligatoires.',
-    '',
-    inv.due_date ? `Échéance : ${formatDateFR(inv.due_date)}.` : '',
-    '',
-    'Pour toute question, n\'hésitez pas à me répondre directement à cet email.',
-    '',
-    'Bien cordialement,',
-    sender,
-    '',
-    '—',
-    `Envoyé via AVA le ${formatDateFR(new Date())}`,
-  ].filter(Boolean).join('\n');
+  ];
+
+  if (stripeLikeUrl) {
+    bodyLines.push(`💳 Régler par carte (${stripeLikeProvider || 'paiement en ligne'}) :`);
+    bodyLines.push(stripeLikeUrl);
+    bodyLines.push('');
+    bodyLines.push(`📄 Voir la facture en ligne (avec IBAN si vous préférez le virement) :`);
+    bodyLines.push(publicUrl);
+  } else {
+    bodyLines.push('Voici le lien direct vers la facture (IBAN inclus pour virement) :');
+    bodyLines.push(publicUrl);
+  }
+
+  bodyLines.push('');
+  if (inv.due_date) bodyLines.push(`Échéance : ${formatDateFR(inv.due_date)}.`);
+  bodyLines.push('');
+  bodyLines.push('Pour toute question, n\'hésitez pas à me répondre directement à cet email.');
+  bodyLines.push('');
+  bodyLines.push('Bien cordialement,');
+  bodyLines.push(sender);
+  bodyLines.push('');
+  bodyLines.push('—');
+  bodyLines.push(`Envoyé via AVA le ${formatDateFR(new Date())}`);
+
+  const body = bodyLines.filter(Boolean).join('\n');
 
   const to = client.email ?? '';
   const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
