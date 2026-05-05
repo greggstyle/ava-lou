@@ -55,6 +55,8 @@ export default async function SettingsPage() {
             iban: profile?.iban ?? '',
             bic: profile?.bic ?? '',
             bank_name: profile?.bank_name ?? '',
+            payment_link_url: profile?.payment_link_url ?? '',
+            payment_link_provider: profile?.payment_link_provider ?? '',
           }}
         />
       </div>

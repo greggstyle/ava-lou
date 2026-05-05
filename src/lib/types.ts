@@ -48,6 +48,10 @@ export interface Profile {
   iban: string | null;
   bic: string | null;
   bank_name: string | null;
+
+  // Payment link template (migration 0011) — Stripe/SumUp/PayPal/etc URL
+  payment_link_url: string | null;
+  payment_link_provider: string | null;
 }
 
 export interface Client {

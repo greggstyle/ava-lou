@@ -32,6 +32,8 @@ export interface ProfileForm {
   iban: string;
   bic: string;
   bank_name: string;
+  payment_link_url: string;
+  payment_link_provider: string;
 }
 
 const inputStyle: React.CSSProperties = {
@@ -86,6 +88,8 @@ export function SettingsForm({ initialProfile }: { initialProfile: ProfileForm }
         iban: profile.iban ? profile.iban.replace(/\s+/g, '').toUpperCase() : null,
         bic: profile.bic ? profile.bic.replace(/\s+/g, '').toUpperCase() : null,
         bank_name: profile.bank_name || null,
+        payment_link_url: profile.payment_link_url || null,
+        payment_link_provider: profile.payment_link_provider || null,
       };
       const { error: upErr } = await supabase.from('profiles').upsert(payload);
       if (upErr) throw upErr;
@@ -316,6 +320,37 @@ export function SettingsForm({ initialProfile }: { initialProfile: ProfileForm }
             <input type="text" style={inputStyle}
               value={profile.bank_name}
               onChange={(e) => setProfile({ ...profile, bank_name: e.target.value })} />
+          </AvaField>
+        </div>
+      </AvaCard>
+
+      <AvaCard padding={16}>
+        <AvaLabel>Lien de paiement en ligne</AvaLabel>
+        <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.muted, marginTop: 6, marginBottom: 12 }}>
+          Si vous avez créé un lien Stripe / SumUp / Lydia / PayPal.me, collez-le ici.
+          AVA l&apos;inclura dans les emails de relance pour permettre un règlement
+          par carte en 1 clic, en plus du virement.
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <AvaField label="URL du lien de paiement" hint="Ex: https://buy.stripe.com/abc123 ou https://pay.sumup.com/b2c/XXX">
+            <input
+              type="url"
+              style={inputStyle}
+              value={profile.payment_link_url}
+              autoCapitalize="off"
+              spellCheck={false}
+              onChange={(e) => setProfile({ ...profile, payment_link_url: e.target.value })}
+              placeholder="https://buy.stripe.com/…"
+            />
+          </AvaField>
+          <AvaField label="Fournisseur" hint="Affiché au client pour transparence — ex: Stripe, SumUp, PayPal">
+            <input
+              type="text"
+              style={inputStyle}
+              value={profile.payment_link_provider}
+              onChange={(e) => setProfile({ ...profile, payment_link_provider: e.target.value })}
+              placeholder="Stripe"
+            />
           </AvaField>
         </div>
       </AvaCard>
