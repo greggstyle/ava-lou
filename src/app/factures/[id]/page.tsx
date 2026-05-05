@@ -180,6 +180,7 @@ export default function FactureDetailPage() {
     if (!client?.email) return null;
     const siteUrl = typeof window !== 'undefined' ? window.location.origin : 'https://ava-lou.vercel.app';
     const viewUrl = `${siteUrl}/voir/facture/${inv.id}`;
+    const pdfUrl = `${siteUrl}/api/factures/${inv.id}/pdf?public=1`;
     const subject = `Facture ${inv.number ?? ''} — ${formatDateFR(inv.issue_date)}`;
     const lines = (inv.line_items ?? []) as LineItem[];
     const detail = lines
@@ -191,6 +192,7 @@ export default function FactureDetailPage() {
       `Vous trouverez ci-dessous le détail de votre facture ${inv.number ?? ''} émise le ${formatDateFR(inv.issue_date)}.`,
       '',
       `Version imprimable : ${viewUrl}`,
+      `Télécharger en PDF : ${pdfUrl}`,
       '',
       'DÉTAIL',
       detail || '- (à préciser)',
@@ -395,14 +397,22 @@ export default function FactureDetailPage() {
 
             <div style={{ marginTop: 14 }}>
               <AvaLabel style={{ marginBottom: 8 }}>Version partageable</AvaLabel>
-              <AvaButton
-                kind="light"
-                onClick={() => window.open(`/voir/facture/${invoice.id}`, '_blank')}
-              >
-                Voir / Imprimer (PDF)
-              </AvaButton>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <AvaButton
+                  kind="primary"
+                  onClick={() => window.open(`/api/factures/${invoice.id}/pdf`, '_blank')}
+                >
+                  Télécharger PDF
+                </AvaButton>
+                <AvaButton
+                  kind="light"
+                  onClick={() => window.open(`/voir/facture/${invoice.id}`, '_blank')}
+                >
+                  Voir en ligne
+                </AvaButton>
+              </div>
               <div style={{ marginTop: 6, font: `400 12px/1.4 ${SANS}`, color: C.muted }}>
-                Page publique imprimable. Lien partageable inclus dans l&apos;email.
+                PDF mentions légales art. L441-9. Lien partageable inclus dans l&apos;email.
               </div>
             </div>
 
