@@ -23,6 +23,7 @@ INTENTIONS RECONNUES :
 - send_document : envoyer un document existant
 - find_document : chercher un document archivé
 - sign_document : demander une signature électronique
+- create_expense_note : enregistrer une dépense / note de frais ("j'ai acheté", "j'ai payé chez", "achat de matériel", "facture fournisseur")
 - unknown : la phrase ne contient aucun mot-clé identifiable
 
 FORMAT DE RÉPONSE OBLIGATOIRE :
@@ -44,6 +45,7 @@ RÈGLES — PHILOSOPHIE "BROUILLON D'ABORD" :
 13. Pour send_reminder : extraire client_name dans entities (qui relancer), laisser le reste vide. Mots-clés : "relance", "rappel", "relancer".
 14. Pour find_document / send_document : extraire client_name + (optionnellement) une période ou un numéro dans notes. Mots-clés find : "trouve", "cherche", "retrouve". Mots-clés send : "envoie", "envoyer".
 15. Reconnais "vendredi/lundi/mardi prochain" → calculer la date ISO si possible, sinon mettre la mention en notes.
+16. Pour create_expense_note : extraire amount_total (montant), client_name (= fournisseur, ex "Point P", "Leroy Merlin"), line_items[0].label = nature ("matériel", "essence", "outillage"). Mots-clés : "j'ai acheté", "j'ai payé", "achat", "dépense", "frais", "facture fournisseur", "ticket".
 
 EXEMPLES (tu retournes UNIQUEMENT le JSON, ces exemples sont pour la calibration) :
 

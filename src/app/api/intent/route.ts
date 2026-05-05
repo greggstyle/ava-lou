@@ -10,6 +10,7 @@ import {
   enrichForFindDocument,
   enrichForSendDocument,
   enrichForScheduleAppointment,
+  enrichForExpense,
 } from '@/lib/intent-enrich';
 
 export const runtime = 'nodejs';
@@ -92,6 +93,10 @@ export async function POST(req: Request) {
         ava_response = enriched.ava_response;
       } else if (result.intent === 'schedule_appointment') {
         const enriched = await enrichForScheduleAppointment(supabase, user.id, result);
+        entities = enriched.entities;
+        ava_response = enriched.ava_response;
+      } else if (result.intent === 'create_expense_note') {
+        const enriched = await enrichForExpense(result);
         entities = enriched.entities;
         ava_response = enriched.ava_response;
       }

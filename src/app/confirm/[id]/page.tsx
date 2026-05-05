@@ -61,6 +61,7 @@ export default async function ConfirmPage({ params }: PageProps) {
   const isFind = intent === 'find_document';
   const isSendDoc = intent === 'send_document';
   const isAppointment = intent === 'schedule_appointment';
+  const isExpense = intent === 'create_expense_note';
 
   type EnrichedEntities = Partial<IntentEntities> & {
     candidate_invoice_id?: string;
@@ -88,6 +89,13 @@ export default async function ConfirmPage({ params }: PageProps) {
       location: string | null;
       client_id: string | null;
       client_name: string | null;
+    };
+    expense?: {
+      label: string;
+      vendor: string | null;
+      amount_ttc: number;
+      category: string;
+      expense_date: string;
     };
     search_results?: Array<{
       id: string;
@@ -235,6 +243,38 @@ export default async function ConfirmPage({ params }: PageProps) {
             ) : (
               <LowConfidenceActions actionId={id} intent={intent} />
             )}
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ─── create_expense_note ───────────────────────────────────
+  if (isExpense && ent.expense) {
+    const exp = ent.expense;
+    return (
+      <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
+        {Header}
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+          <AvaLabel>AVA a compris :</AvaLabel>
+          <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>{avaResponse}</div>
+          <AvaCard padding={18}>
+            <div style={{ font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2 }}>
+              Dépense
+            </div>
+            <div style={{ font: `600 32px/1 ${SERIF}`, color: C.warn, marginTop: 8, ...TNUM }}>
+              − {formatPriceFR(exp.amount_ttc)}
+            </div>
+            <div style={{ font: `500 14px/1.4 ${SANS}`, color: C.ink, marginTop: 8 }}>
+              {exp.label}{exp.vendor ? ` · ${exp.vendor}` : ''}
+            </div>
+            <div style={{ font: `400 12px/1.3 ${SANS}`, color: C.muted, marginTop: 4 }}>
+              Catégorie : {exp.category} · Date : {exp.expense_date}
+            </div>
+          </AvaCard>
+          <AvaDisclaimer />
+          <div style={{ marginTop: 'auto' }}>
+            <MarkPaidActions actionId={id} invoiceId="_expense" />
           </div>
         </div>
       </main>

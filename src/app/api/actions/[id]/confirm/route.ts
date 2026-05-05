@@ -209,6 +209,40 @@ export async function POST(
     return NextResponse.json({ target_table: table, target_id: inserted.id });
   }
 
+  // create_expense_note: insert into expenses
+  if (intent === 'create_expense_note') {
+    const exp = (entities as Partial<IntentEntities> & {
+      expense?: { label: string; vendor: string | null; amount_ttc: number; category: string; expense_date: string }
+    }).expense;
+    if (!exp || !exp.amount_ttc) {
+      await supabase.from('ava_actions').update({ status: 'pending' }).eq('id', id).eq('user_id', user.id).eq('status', 'executing');
+      return NextResponse.json({ error: 'Montant de la dépense manquant.' }, { status: 400 });
+    }
+    const { data: inserted, error: insErr } = await supabase
+      .from('expenses')
+      .insert({
+        user_id: user.id,
+        label: exp.label,
+        vendor: exp.vendor,
+        amount_ttc: exp.amount_ttc,
+        category: exp.category,
+        expense_date: exp.expense_date,
+        notes: action.input_raw,
+      })
+      .select('id')
+      .single();
+    if (insErr || !inserted) {
+      await supabase.from('ava_actions').update({ status: 'pending' }).eq('id', id).eq('user_id', user.id).eq('status', 'executing');
+      return NextResponse.json({ error: 'Impossible d\'enregistrer la dépense.' }, { status: 500 });
+    }
+    await supabase
+      .from('ava_actions')
+      .update({ status: 'executed', target_table: 'expenses', target_id: inserted.id })
+      .eq('id', id)
+      .eq('user_id', user.id);
+    return NextResponse.json({ target_table: 'expenses', target_id: inserted.id });
+  }
+
   // schedule_appointment: insert into appointments
   if (intent === 'schedule_appointment') {
     const apt = (entities as Partial<IntentEntities> & {

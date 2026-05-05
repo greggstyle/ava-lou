@@ -113,6 +113,30 @@ export interface Appointment {
   created_at: string;
 }
 
+export type ExpenseCategory =
+  | 'matériel'
+  | 'déplacement'
+  | 'sous-traitance'
+  | 'restauration'
+  | 'téléphonie'
+  | 'outillage'
+  | 'formation'
+  | 'autre';
+
+export interface Expense {
+  id: string;
+  user_id: string;
+  label: string;
+  vendor: string | null;
+  amount_ttc: number;
+  amount_ht: number | null;
+  vat_rate: number | null;
+  category: ExpenseCategory;
+  expense_date: string;
+  notes: string | null;
+  created_at: string;
+}
+
 export type AvaIntent =
   | 'create_invoice'
   | 'create_quote'
@@ -124,6 +148,7 @@ export type AvaIntent =
   | 'send_document'
   | 'find_document'
   | 'sign_document'
+  | 'create_expense_note'
   | 'unknown';
 
 export interface IntentEntities {

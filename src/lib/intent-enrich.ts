@@ -51,6 +51,13 @@ export type EnrichedEntities = IntentEntities & {
     client_name: string | null;
     duration_min?: number;
   };
+  expense?: {
+    label: string;
+    vendor: string | null;
+    amount_ttc: number;
+    category: string;
+    expense_date: string;
+  };
 };
 
 interface EnrichResult {
@@ -398,6 +405,76 @@ function parseFrenchDate(input: string, baseDate: Date = new Date()): Date | nul
   }
 
   return null;
+}
+
+/**
+ * create_expense_note: parse vendor + amount + category from the dictation.
+ * "J'ai acheté du matériel chez Point P pour 340 €" →
+ *   { vendor: 'Point P', amount: 340, category: 'matériel', label: 'matériel' }
+ */
+export async function enrichForExpense(
+  result: IntentResult,
+): Promise<EnrichResult> {
+  const entities: EnrichedEntities = { ...result.entities };
+  const e = result.entities;
+
+  // Try to read amount from amount_total or first line_item unit_price
+  let amount = e.amount_total ?? null;
+  if (!amount && Array.isArray(e.line_items) && e.line_items[0]?.unit_price) {
+    amount = e.line_items[0].unit_price;
+  }
+  // Fallback: regex through notes
+  if (!amount && e.notes) {
+    const m = e.notes.match(/(\d+(?:[.,]\d+)?)\s*€?/);
+    if (m) amount = parseFloat(m[1].replace(',', '.'));
+  }
+
+  // Vendor: client_name field (Claude likely puts it there) or notes "chez X"
+  let vendor: string | null = e.client_name;
+  if (!vendor && e.notes) {
+    const v = e.notes.match(/chez\s+([A-Z][\w\s.\-&]{1,40})/);
+    if (v) vendor = v[1].trim();
+  }
+
+  // Category from line_item label or notes keywords
+  const txt = `${(e.line_items?.[0]?.label ?? '')} ${e.notes ?? ''}`.toLowerCase();
+  let category = 'autre';
+  if (/mat[ée]riel|fourniture|consommable|piece/.test(txt)) category = 'matériel';
+  else if (/d[ée]placement|essence|carburant|p[ée]age|train|avion|taxi|uber/.test(txt)) category = 'déplacement';
+  else if (/sous[\s-]traitance|prestataire/.test(txt)) category = 'sous-traitance';
+  else if (/repas|restaurant|d[ée]jeuner|d[ée]ner/.test(txt)) category = 'restauration';
+  else if (/t[ée]l[ée]phone|abonnement\s+t[ée]l|forfait\s+mobile/.test(txt)) category = 'téléphonie';
+  else if (/outil|outillage|machine/.test(txt)) category = 'outillage';
+  else if (/formation|stage|s[ée]minaire/.test(txt)) category = 'formation';
+
+  const label = e.line_items?.[0]?.label?.trim() || category.charAt(0).toUpperCase() + category.slice(1);
+
+  // Date
+  const today = new Date();
+  let expenseDate = today.toISOString().slice(0, 10);
+  const parsed = parseFrenchDate(e.notes ?? '') ?? parseFrenchDate(e.date ?? '');
+  if (parsed) expenseDate = parsed.toISOString().slice(0, 10);
+
+  if (!amount) {
+    return {
+      entities,
+      ava_response: 'Quel montant pour cette dépense ?',
+    };
+  }
+
+  entities.expense = {
+    label,
+    vendor,
+    amount_ttc: amount,
+    category,
+    expense_date: expenseDate,
+  };
+
+  const ava_response = vendor
+    ? `Dépense ${formatPriceFR(amount)} chez ${vendor} (${category}) ?`
+    : `Dépense ${formatPriceFR(amount)} en ${category} ?`;
+
+  return { entities, ava_response };
 }
 
 /**
