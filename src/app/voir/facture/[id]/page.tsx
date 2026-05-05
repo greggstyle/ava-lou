@@ -5,6 +5,8 @@ import { C, SANS, SERIF } from '@/components/ava';
 import { formatPriceFR, formatDateFR } from '@/lib/format';
 import type { Client, Invoice, Profile } from '@/lib/types';
 import { PrintButton } from '@/components/print-button';
+import { ShareButton } from '@/components/share-button';
+import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +21,7 @@ export default async function VoirFacturePage({ params }: PageProps) {
 
   const { data: invoice } = await supabase
     .from('invoices')
-    .select('*, clients(id, name, email, company_name, siret, vat_intra, address, postal_code, city, is_business)')
+    .select('*, clients(id, name, email, phone, company_name, siret, vat_intra, address, postal_code, city, is_business)')
     .eq('id', id)
     .maybeSingle();
 
@@ -30,6 +32,14 @@ export default async function VoirFacturePage({ params }: PageProps) {
     .select('*')
     .eq('id', invoice.user_id)
     .maybeSingle();
+
+  // Need the absolute public URL so WhatsApp share works correctly
+  const h = await headers();
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'ava-lou.vercel.app';
+  const proto = h.get('x-forwarded-proto') ?? 'https';
+  const publicUrl = `${proto}://${host}/voir/facture/${id}`;
+  const clientObj = invoice.clients as { name?: string | null; phone?: string | null } | null;
+  const clientPhone = (invoice as Invoice & { clients?: { phone?: string | null } | null }).clients?.phone ?? null;
 
   return (
     <main className="ava-print-page" style={{ background: C.bone, minHeight: '100vh' }}>
@@ -53,7 +63,17 @@ export default async function VoirFacturePage({ params }: PageProps) {
             AVA · {profile?.company_name || profile?.full_name || 'Document'}
           </span>
         </div>
-        <PrintButton pdfHref={`/api/factures/${id}/pdf?public=1`} />
+        <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap' }}>
+          <ShareButton
+            publicUrl={publicUrl}
+            documentNumber={invoice.number ?? null}
+            amount={Number(invoice.amount_ttc)}
+            kind="facture"
+            clientName={clientObj?.name ?? null}
+            clientPhone={clientPhone}
+          />
+          <PrintButton pdfHref={`/api/factures/${id}/pdf?public=1`} />
+        </span>
       </header>
 
       <div style={{ marginBottom: 20 }}>

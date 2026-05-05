@@ -5,6 +5,8 @@ import { C, SANS, SERIF } from '@/components/ava';
 import { formatPriceFR, formatDateFR } from '@/lib/format';
 import type { Client, Profile, Quote } from '@/lib/types';
 import { PrintButton } from '@/components/print-button';
+import { ShareButton } from '@/components/share-button';
+import { headers } from 'next/headers';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,7 +20,7 @@ export default async function VoirDevisPage({ params }: PageProps) {
 
   const { data: quote } = await supabase
     .from('quotes')
-    .select('*, clients(id, name, email, company_name, siret, vat_intra, address, postal_code, city, is_business)')
+    .select('*, clients(id, name, email, phone, company_name, siret, vat_intra, address, postal_code, city, is_business)')
     .eq('id', id)
     .maybeSingle();
 
@@ -29,6 +31,13 @@ export default async function VoirDevisPage({ params }: PageProps) {
     .select('*')
     .eq('id', quote.user_id)
     .maybeSingle();
+
+  const h = await headers();
+  const host = h.get('x-forwarded-host') ?? h.get('host') ?? 'ava-lou.vercel.app';
+  const proto = h.get('x-forwarded-proto') ?? 'https';
+  const publicUrl = `${proto}://${host}/voir/devis/${id}`;
+  const clientObj = quote.clients as { name?: string | null; phone?: string | null } | null;
+  const clientPhone = (quote as Quote & { clients?: { phone?: string | null } | null }).clients?.phone ?? null;
 
   return (
     <main className="ava-print-page" style={{ background: C.bone, minHeight: '100vh' }}>
@@ -52,7 +61,17 @@ export default async function VoirDevisPage({ params }: PageProps) {
             AVA · {profile?.company_name || profile?.full_name || 'Document'}
           </span>
         </div>
-        <PrintButton pdfHref={`/api/devis/${id}/pdf?public=1`} />
+        <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap' }}>
+          <ShareButton
+            publicUrl={publicUrl}
+            documentNumber={quote.number ?? null}
+            amount={Number(quote.amount_ttc)}
+            kind="devis"
+            clientName={clientObj?.name ?? null}
+            clientPhone={clientPhone}
+          />
+          <PrintButton pdfHref={`/api/devis/${id}/pdf?public=1`} />
+        </span>
       </header>
 
       <div style={{ marginBottom: 20 }}>
