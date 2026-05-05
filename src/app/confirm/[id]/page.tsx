@@ -62,6 +62,7 @@ export default async function ConfirmPage({ params }: PageProps) {
   const isSendDoc = intent === 'send_document';
   const isAppointment = intent === 'schedule_appointment';
   const isExpense = intent === 'create_expense_note';
+  const isInsights = intent === 'get_insights';
 
   type EnrichedEntities = Partial<IntentEntities> & {
     candidate_invoice_id?: string;
@@ -412,6 +413,27 @@ export default async function ConfirmPage({ params }: PageProps) {
           ) : null}
           <div style={{ marginTop: 'auto' }}>
             <ReadOnlyActions actionId={id} primaryHref="/" primaryLabel="Retour à l'accueil" />
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // ─── get_insights ──────────────────────────────────────────
+  if (isInsights) {
+    return (
+      <main style={{ minHeight: '100vh', background: C.bone, display: 'flex', flexDirection: 'column' }}>
+        {Header}
+        <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: 16, flex: 1 }}>
+          <AvaLabel>AVA vous conseille :</AvaLabel>
+          <div style={{ font: `400 22px/1.45 ${SERIF}`, color: C.ink }}>
+            {avaResponse}
+          </div>
+          <div style={{ font: `400 14px/1.55 ${SANS}`, color: C.ink2 }}>
+            Vos insights stratégiques se trouvent sur la page dédiée. AVA y analyse vos 90 derniers jours pour repérer ce qui mérite votre attention.
+          </div>
+          <div style={{ marginTop: 'auto' }}>
+            <ReadOnlyActions actionId={id} primaryHref="/insights" primaryLabel="Voir mes insights" />
           </div>
         </div>
       </main>

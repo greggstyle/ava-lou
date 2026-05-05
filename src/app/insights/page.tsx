@@ -90,7 +90,7 @@ export default async function InsightsPage() {
                   Généré {formatDateRelativeFR(p)}
                 </AvaLabel>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {grouped.get(p)!.map((insight) => {
+                  {(grouped.get(p) ?? []).map((insight) => {
                     const sev = SEVERITY_STYLE[insight.severity] ?? SEVERITY_STYLE.info;
                     return (
                       <AvaCard

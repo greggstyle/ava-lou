@@ -185,7 +185,6 @@ export function summarizeSnapshot(snap: UserSnapshot): string {
   lines.push(`Période analysée : 90 derniers jours, généré ${snap.generated_at.slice(0, 10)}.`);
 
   // Invoices summary
-  const total = snap.invoices.reduce((s, i) => s + i.amount_ttc, 0);
   const paid = snap.invoices.filter((i) => i.status === 'payée');
   const paidTotal = paid.reduce((s, i) => s + i.amount_ttc, 0);
   const unpaid = snap.invoices.filter((i) => i.status === 'envoyée' || i.status === 'en_retard');
@@ -248,11 +247,16 @@ export function summarizeSnapshot(snap: UserSnapshot): string {
   // Net
   lines.push(`Bilan période : recettes ${paidTotal.toFixed(2)} €, dépenses ${totalExp.toFixed(2)} €, net ${(paidTotal - totalExp).toFixed(2)} €`);
 
-  // Day-of-week distribution for invoices
+  // Day-of-week distribution for invoices.
+  // ISO YYYY-MM-DD parses as UTC; we want the actual day of issue regardless
+  // of the user's timezone (artisan-relative dates), so split + parseInt manually.
   const dow = [0, 0, 0, 0, 0, 0, 0];
   for (const i of snap.invoices) {
-    const d = new Date(i.issue_date).getDay();
-    dow[d] += 1;
+    const [y, m, d] = i.issue_date.split('-').map((s) => parseInt(s, 10));
+    if (!y || !m || !d) continue;
+    // Use UTC constructor so the day matches the date string exactly
+    const day = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+    dow[day] += 1;
   }
   const dowNames = ['dim', 'lun', 'mar', 'mer', 'jeu', 'ven', 'sam'];
   const dowSummary = dow.map((c, i) => `${dowNames[i]} ${c}`).join(', ');
@@ -276,12 +280,16 @@ export async function generateInsights(snap: UserSnapshot): Promise<Insight[]> {
 
   let resp;
   try {
-    resp = await anthropic.messages.create({
-      model: 'claude-sonnet-4-5',
-      max_tokens: 1500,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: userMsg }],
-    });
+    // 25s timeout — long enough for thinking, short enough to not stall the cron
+    resp = await anthropic.messages.create(
+      {
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1500,
+        system: SYSTEM_PROMPT,
+        messages: [{ role: 'user', content: userMsg }],
+      },
+      { timeout: 25_000 },
+    );
   } catch (err) {
     console.warn('[insights] Claude error:', err);
     return [];

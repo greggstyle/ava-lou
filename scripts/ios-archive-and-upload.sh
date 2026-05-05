@@ -54,7 +54,19 @@ EXPORT_PATH="$BUILD_DIR/export"
 EXPORT_OPTIONS="scripts/exportOptions.plist"
 
 echo "Step 1/3: Capacitor sync"
-pnpm cap sync ios
+# Find pnpm regardless of PATH state in subshells (.zshrc not loaded in nohup, etc.)
+PNPM_BIN=""
+for candidate in "$HOME/.npm-global/bin/pnpm" "$HOME/Library/pnpm/pnpm" /usr/local/bin/pnpm /opt/homebrew/bin/pnpm; do
+  [ -x "$candidate" ] && PNPM_BIN="$candidate" && break
+done
+if [ -z "$PNPM_BIN" ]; then
+  PNPM_BIN=$(command -v pnpm 2>/dev/null || true)
+fi
+if [ -z "$PNPM_BIN" ]; then
+  echo "Error: pnpm not found in PATH or common locations" >&2
+  exit 1
+fi
+"$PNPM_BIN" cap sync ios
 
 echo "Step 2/3: Xcode archive"
 rm -rf "$BUILD_DIR"

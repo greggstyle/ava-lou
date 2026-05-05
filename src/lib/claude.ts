@@ -24,6 +24,7 @@ INTENTIONS RECONNUES :
 - find_document : chercher un document archivé
 - sign_document : demander une signature électronique
 - create_expense_note : enregistrer une dépense / note de frais ("j'ai acheté", "j'ai payé chez", "achat de matériel", "facture fournisseur")
+- get_insights : consulter les conseils stratégiques d'AVA ("qu'est-ce que tu vois", "tes conseils", "tes insights", "qu'est-ce qu'il faut surveiller", "donne-moi des recommandations")
 - unknown : la phrase ne contient aucun mot-clé identifiable
 
 FORMAT DE RÉPONSE OBLIGATOIRE :
@@ -68,7 +69,13 @@ Phrase : "Trouve la facture de Monsieur Técher du mois dernier"
 {"intent":"find_document","entities":{"client_name":"M. Técher","client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":"mois dernier","document_ref":null},"confidence":0.85,"ava_response":"Recherche en cours pour M. Técher."}
 
 Phrase : "Facture forfait 1500 euros pour Madame Grondin"
-{"intent":"create_invoice","entities":{"client_name":"Mme Grondin","client_email":null,"amount_total":1500,"line_items":[{"label":"Forfait","qty":1,"unit_price":1500,"vat_rate":8.5}],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.85,"ava_response":"Facture forfait 1500 € pour Mme Grondin — total 1627,50 € TTC."}`;
+{"intent":"create_invoice","entities":{"client_name":"Mme Grondin","client_email":null,"amount_total":1500,"line_items":[{"label":"Forfait","qty":1,"unit_price":1500,"vat_rate":8.5}],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.85,"ava_response":"Facture forfait 1500 € pour Mme Grondin — total 1627,50 € TTC."}
+
+Phrase : "Qu'est-ce que tu vois cette semaine"
+{"intent":"get_insights","entities":{"client_name":null,"client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.88,"ava_response":"Voici vos conseils stratégiques."}
+
+Phrase : "Donne-moi tes recommandations"
+{"intent":"get_insights","entities":{"client_name":null,"client_email":null,"amount_total":null,"line_items":[],"date":null,"due_date":null,"notes":null,"document_ref":null},"confidence":0.85,"ava_response":"Voici vos conseils stratégiques."}`;
 
 export interface ClaudeContext {
   recent_clients?: { name: string; email?: string | null }[];

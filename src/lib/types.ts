@@ -149,6 +149,7 @@ export type AvaIntent =
   | 'find_document'
   | 'sign_document'
   | 'create_expense_note'
+  | 'get_insights'
   | 'unknown';
 
 export interface IntentEntities {

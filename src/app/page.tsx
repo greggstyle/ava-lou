@@ -76,6 +76,15 @@ export default async function HomePage() {
     .order('starts_at', { ascending: true })
     .limit(5);
 
+  // Top unread/undismissed insight (V7 — AVA Conseillère)
+  const { data: topInsight } = await supabase
+    .from('insights')
+    .select('id, kind, title, body, severity, generated_at')
+    .eq('is_dismissed', false)
+    .order('generated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   return (
     <main style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <AvaTopBar
@@ -106,6 +115,40 @@ export default async function HomePage() {
 
         {notifications && notifications.length > 0 && (
           <NotificationsBanner initial={notifications} />
+        )}
+
+        {topInsight && (
+          <div style={{ marginTop: 16 }}>
+            <AvaLabel style={{ marginBottom: 8 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span style={{
+                  width: 6, height: 6, borderRadius: 3,
+                  background: topInsight.severity === 'warn' ? C.warn : topInsight.severity === 'opportunity' ? C.green : C.muted,
+                }} />
+                AVA vous conseille
+              </span>
+            </AvaLabel>
+            <Link href="/insights" style={{ textDecoration: 'none' }}>
+              <AvaCard padding={16} style={{
+                background: topInsight.severity === 'warn' ? '#FFF8E5'
+                  : topInsight.severity === 'opportunity' ? C.greenSoft
+                  : C.paper,
+                borderColor: topInsight.severity === 'warn' ? '#F0E6BD'
+                  : topInsight.severity === 'opportunity' ? '#CAE8D4'
+                  : C.line,
+              }}>
+                <div style={{ font: `500 16px/1.35 ${SERIF}`, color: C.ink, marginBottom: 6 }}>
+                  {topInsight.title}
+                </div>
+                <div style={{ font: `400 13px/1.5 ${SANS}`, color: C.ink2 }}>
+                  {topInsight.body.length > 140 ? topInsight.body.slice(0, 140) + '…' : topInsight.body}
+                </div>
+                <div style={{ font: `500 12px/1 ${SANS}`, color: C.muted, marginTop: 10 }}>
+                  Voir tous mes insights →
+                </div>
+              </AvaCard>
+            </Link>
+          </div>
         )}
 
         <InstallHint />
@@ -238,6 +281,12 @@ export default async function HomePage() {
             <AvaCard padding={14} style={{ cursor: 'pointer' }}>
               <AvaLabel>Historique</AvaLabel>
               <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Vocal</div>
+            </AvaCard>
+          </Link>
+          <Link href="/insights" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{ cursor: 'pointer' }}>
+              <AvaLabel>Insights</AvaLabel>
+              <div style={{ font: `600 18px/1.2 ${SERIF}`, color: C.ink, marginTop: 4 }}>Conseils</div>
             </AvaCard>
           </Link>
         </div>

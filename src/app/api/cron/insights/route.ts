@@ -25,13 +25,39 @@ export async function GET(req: NextRequest) {
   const supabase = createAdminClient();
   const now = new Date();
 
-  // Find users who actually used the app recently (have invoices)
-  const { data: usersData } = await supabase
-    .from('invoices')
-    .select('user_id')
-    .gte('created_at', new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString());
+  // Cap how many users we process per run so we don't burn through the
+  // 5-minute function timeout. With ~5s per Claude call + persist, 50 users
+  // ≈ 4 minutes. Anything bigger ships in subsequent runs (the dedup check
+  // below ensures we don't re-process within the same week).
+  const MAX_USERS_PER_RUN = 50;
 
-  const userIds = Array.from(new Set((usersData ?? []).map((r) => r.user_id as string)));
+  // Page through users with invoices in the last 90 days. RANGE the query so
+  // we only hit pg-roq for our slice rather than loading every invoice.
+  const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString();
+  const seen = new Set<string>();
+  let from = 0;
+  const pageSize = 500;
+  while (seen.size < MAX_USERS_PER_RUN) {
+    const { data: page, error: pageErr } = await supabase
+      .from('invoices')
+      .select('user_id')
+      .gte('created_at', ninetyDaysAgo)
+      .order('user_id', { ascending: true })
+      .range(from, from + pageSize - 1);
+    if (pageErr) {
+      console.warn('[cron insights] page error', pageErr);
+      break;
+    }
+    if (!page || page.length === 0) break;
+    for (const row of page) {
+      seen.add(row.user_id as string);
+      if (seen.size >= MAX_USERS_PER_RUN) break;
+    }
+    if (page.length < pageSize) break;
+    from += pageSize;
+  }
+
+  const userIds = Array.from(seen);
   let processed = 0;
   let generatedTotal = 0;
   const skipped: Record<string, number> = {};
@@ -65,6 +91,7 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     users_seen: userIds.length,
+    max_per_run: MAX_USERS_PER_RUN,
     processed,
     insights_generated: generatedTotal,
     skipped,
