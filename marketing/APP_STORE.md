@@ -157,4 +157,96 @@ facturation,artisan,devis,vocal,whisper,dictée,DROM,Réunion,plomberie,électri
 
 ## Screenshots
 
-Voir `marketing/screenshots/` — 6 mockups Onde aux dimensions iPhone 6.7" (1290 × 2796 px).
+Voir `marketing/screenshots/png/` — 6 mockups Onde aux dimensions iPhone 6.5"/6.7" (1284 × 2778 px).
+
+---
+
+# TestFlight — Test Information
+
+À renseigner dans **App Store Connect → TestFlight → Test Information** (visible aux testeurs).
+
+## Beta App Description (max 4000 caractères)
+
+```
+AVA — V0 (beta interne) · Assistance vocale administrative pour artisans
+
+Merci d'aider à tester AVA. Vous êtes parmi les premiers à l'essayer.
+
+CE QUI MARCHE
+• Login par lien magique (vérifiez votre boîte mail)
+• Voix : appuyez sur le micro, dictez, AVA reformule, vous validez
+• Factures, devis, clients, dépenses, RDV — tout est créable à la voix ET au formulaire
+• Trésorerie en direct, historique des actions vocales, agenda
+• Mentions légales conformes art. L441-9
+• SIRET autocomplete via data.gouv (Sirene INSEE)
+
+CE QUE NOUS CHERCHONS
+1. Le micro fonctionne-t-il dès la première fois ? (iOS demande l'autorisation)
+2. La transcription Whisper comprend-elle votre accent ?
+3. AVA structure-t-elle correctement vos factures ? Sinon, comment l'avez-vous formulé ?
+4. La mention « Brouillon — rien n'est envoyé sans votre accord » est-elle rassurante ?
+5. Le « Voir / Imprimer (PDF) » et l'envoi par email fonctionnent-ils sur votre iPhone ?
+
+PRÉCAUTIONS V0
+• N'utilisez pas pour des factures réelles ayant un impact fiscal sans validation expert-comptable
+• Les données sont conservées sur Supabase (UE) mais cette beta est en accès limité
+• Quelques bugs sont attendus — c'est exactement ce qu'on veut corriger
+
+COMMENT REMONTER UN PROBLÈME
+• Email : greg@gonnected.com
+• Décrivez en 2 lignes : ce que vous avez dit, ce qu'AVA a fait, ce que vous attendiez
+• Ajoutez une capture si possible
+
+Merci !
+```
+
+## What to Test (release notes du build)
+
+```
+Build 1.0 · première release TestFlight
+
+Tester en priorité :
+1. Le flux vocal complet : tap mic → dictée → confirmation → facture créée
+2. La page publique /voir/facture/[id] (lien partageable au client)
+3. L'envoi par email : ouvre votre client mail avec le corps pré-rempli
+4. L'agenda : « RDV vendredi 14h chez M. Payet »
+5. Les dépenses : « J'ai acheté du matériel chez Point P pour 340 € »
+
+Tests bonus :
+• « Qu'est-ce qui rentre cette semaine ? » → trésorerie live
+• « M. Payet a payé » → facture marquée payée
+• « Relance Mme Hoarau » → email courtois rédigé par AVA
+
+Connus :
+• PDF uniquement via print iPhone Safari
+• Pas encore de notifications push
+• Tutoiement toggle écrit en base mais labels pas câblés
+```
+
+## Feedback email
+
+```
+greg@gonnected.com
+```
+
+## Marketing URL
+
+```
+https://ava-lou.vercel.app
+```
+
+## Privacy Policy
+
+```
+https://ava-lou.vercel.app/legal/privacy
+```
+
+## Internal Testing — sans Beta Review
+
+Les **testeurs internes** (jusqu'à 100, doivent avoir un rôle dans App Store Connect) reçoivent automatiquement le build sans Apple Review. Pour de l'**External Testing** (jusqu'à 10 000 testeurs), une Beta Review légère 24-48h est requise.
+
+**Ajouter testeurs internes** :
+1. App Store Connect → TestFlight → Internal Testing → **+**
+2. Créer un groupe "AVA Testers"
+3. Ajouter par email
+4. Apple les invite automatiquement
