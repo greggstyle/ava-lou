@@ -113,8 +113,8 @@ export default async function BilanPage({ searchParams }: { searchParams: Promis
           Vue d&apos;ensemble — recettes encaissées, dépenses, résultat net.
         </div>
 
-        {/* Year picker */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+        {/* Year picker + PDF download */}
+        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
           {yearOptions.map((y) => (
             <a
               key={y}
@@ -132,6 +132,20 @@ export default async function BilanPage({ searchParams }: { searchParams: Promis
               {y}
             </a>
           ))}
+          <a
+            href={`/api/bilan/pdf?year=${year}`}
+            style={{
+              textDecoration: 'none',
+              font: `500 13px/1 ${SANS}`,
+              color: C.paper,
+              background: C.green,
+              borderRadius: 999,
+              padding: '8px 14px',
+              marginLeft: 'auto',
+            }}
+          >
+            Télécharger PDF
+          </a>
         </div>
 
         {/* Headline cards */}
