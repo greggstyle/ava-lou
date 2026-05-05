@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AvaTopBar, AvaCard, AvaLabel, C, SANS, SERIF } from '@/components/ava';
 import { ExportControls } from '@/components/export-controls';
+import { TvaMonthlyPreview } from '@/components/tva-monthly-preview';
 import { formatPriceFR } from '@/lib/format';
 
 export const dynamic = 'force-dynamic';
@@ -106,6 +107,10 @@ export default async function ComptabilitePage() {
             </div>
           </div>
         </AvaCard>
+
+        <div style={{ marginBottom: 16 }}>
+          <TvaMonthlyPreview />
+        </div>
 
         <ExportControls />
 
