@@ -52,6 +52,9 @@ export default async function SettingsPage() {
             late_penalty_rate: profile?.late_penalty_rate != null ? String(profile.late_penalty_rate) : '10.5',
             payment_terms_days: profile?.payment_terms_days != null ? String(profile.payment_terms_days) : '30',
             b2c_mediator: profile?.b2c_mediator ?? '',
+            iban: profile?.iban ?? '',
+            bic: profile?.bic ?? '',
+            bank_name: profile?.bank_name ?? '',
           }}
         />
       </div>
