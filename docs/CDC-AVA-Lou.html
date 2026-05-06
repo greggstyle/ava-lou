@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Cahier des charges — AVA-Lou</title>
+<style>
+@page {
+  size: A4;
+  margin: 22mm 18mm 24mm;
+}
+
+@font-face {
+  font-family: 'InstrumentSerif';
+  src: url(https://fonts.gstatic.com/s/instrumentserif/v9/jizDREVItHgc8qDIbSTKq4XKVjnFuOlnkw.ttf) format('truetype');
+  font-style: normal;
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'InstrumentSerif';
+  src: url(https://fonts.gstatic.com/s/instrumentserif/v9/jizFREVItHgc8qDIbSTKq4XKVjnFuOlEhsg6Wg.ttf) format('truetype');
+  font-style: italic;
+  font-weight: 400;
+}
+@font-face {
+  font-family: 'InterTight';
+  src: url(https://fonts.gstatic.com/s/intertight/v7/NGS6v5_NC0k9P9I7L8a2pBzlx5W1k_dgU2Cw.woff2) format('woff2');
+  font-style: normal;
+  font-weight: 400;
+}
+
+:root {
+  --bone: #F4F3EE;
+  --paper: #FFFFFF;
+  --ink: #0B1D33;
+  --ink2: #23344B;
+  --muted: #6B7480;
+  --line: #E5E3DA;
+  --green: #1F9D55;
+  --orange: #E87B3A;
+  --soft: #F7F5EE;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'InterTight', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
+  font-size: 10pt;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Cover page */
+.cover {
+  page-break-after: always;
+  height: 252mm; /* roughly the A4 inner area */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 40mm;
+}
+.cover .brand {
+  font-size: 9pt;
+  letter-spacing: 1.4pt;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.cover h1 {
+  font-family: 'InstrumentSerif', 'Times New Roman', serif;
+  font-size: 56pt;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+  margin: 16mm 0 0;
+  font-weight: 400;
+}
+.cover h1 em {
+  font-style: italic;
+  color: var(--green);
+}
+.cover .tagline {
+  margin-top: 14mm;
+  font-size: 14pt;
+  line-height: 1.4;
+  color: var(--ink2);
+  max-width: 110mm;
+  font-style: italic;
+  font-family: 'InstrumentSerif', serif;
+}
+.cover .meta {
+  font-size: 9pt;
+  color: var(--muted);
+  border-top: 0.5pt solid var(--line);
+  padding-top: 6mm;
+  margin-top: auto;
+}
+
+/* TOC */
+nav.toc {
+  page-break-after: always;
+}
+
+/* Headings */
+h1, h2, h3, h4 {
+  font-family: 'InstrumentSerif', 'Times New Roman', serif;
+  color: var(--ink);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+h1 {
+  font-size: 24pt;
+  line-height: 1.1;
+  margin: 18mm 0 6mm;
+  border-top: 0.5pt solid var(--line);
+  padding-top: 8mm;
+  page-break-before: always;
+}
+h1:first-of-type {
+  page-break-before: auto;
+  border-top: none;
+  padding-top: 0;
+}
+h2 {
+  font-size: 16pt;
+  margin: 10mm 0 3mm;
+}
+h3 {
+  font-size: 13pt;
+  margin: 7mm 0 2mm;
+}
+h4 {
+  font-size: 11pt;
+  font-family: 'InterTight', sans-serif;
+  font-weight: 600;
+  margin: 5mm 0 1mm;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+p {
+  margin: 0 0 3mm;
+  orphans: 3;
+  widows: 3;
+}
+
+ul, ol {
+  margin: 0 0 4mm;
+  padding-left: 6mm;
+}
+li {
+  margin-bottom: 1.2mm;
+}
+
+strong { color: var(--ink); font-weight: 600; }
+em { font-style: italic; }
+
+a {
+  color: var(--ink2);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 1.5pt;
+}
+
+code {
+  font-family: 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 8.5pt;
+  background: var(--soft);
+  padding: 0.5pt 3pt;
+  border-radius: 2pt;
+  color: var(--ink2);
+}
+pre {
+  background: var(--soft);
+  border: 0.5pt solid var(--line);
+  border-radius: 3pt;
+  padding: 4mm 5mm;
+  overflow-x: auto;
+  font-size: 8pt;
+  line-height: 1.45;
+  page-break-inside: avoid;
+}
+pre code {
+  background: none;
+  padding: 0;
+  font-size: 8pt;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 3mm 0 5mm;
+  font-size: 9pt;
+  page-break-inside: avoid;
+}
+th {
+  text-align: left;
+  background: var(--bone);
+  border-bottom: 0.5pt solid var(--line);
+  padding: 2mm 3mm;
+  font-weight: 600;
+  color: var(--ink);
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+td {
+  padding: 2mm 3mm;
+  border-bottom: 0.5pt solid var(--line);
+  color: var(--ink2);
+  vertical-align: top;
+}
+tbody tr:last-child td { border-bottom: none; }
+
+hr {
+  border: none;
+  border-top: 0.5pt solid var(--line);
+  margin: 6mm 0;
+}
+
+blockquote {
+  border-left: 2pt solid var(--green);
+  padding: 1mm 0 1mm 5mm;
+  font-family: 'InstrumentSerif', serif;
+  font-style: italic;
+  color: var(--ink2);
+  margin: 4mm 0;
+}
+</style>
+</head>
+<body>
+  <section class="cover">
+    <div>
+      <div class="brand">AVA · Cahier des charges</div>
+      <h1>L'OS administratif des <em>indépendants</em>.</h1>
+      <p class="tagline">Voice-first invoicing pour artisans des DROM.<br/>
+        Comprendre, parler, agir — par la voix.</p>
+    </div>
+    <div class="meta">
+      Greg Hanffou · Gonnected · 6 mai 2026<br/>
+      Document de référence — version v0.38<br/>
+      ava-lou.vercel.app · github.com/greggstyle/ava-lou
+    </div>
+  </section>
+  <h1 id="cahier-des-charges-ava-lou">Cahier des charges — AVA-Lou</h1>
+<p><strong>L'OS administratif des indépendants</strong></p>
+<p><em>Voice-first invoicing pour artisans des DROM</em></p>
+<p>Version du 6 mai 2026 — Greg Hanffou</p>
+<hr/>
+<h2 id="sommaire">Sommaire</h2>
+<ol>
+<li><a href="#1-présentation">Présentation</a></li>
+<li><a href="#2-utilisateur-cible--contexte">Utilisateur cible & contexte</a></li>
+<li><a href="#3-promesse-produit">Promesse produit</a></li>
+<li><a href="#4-parcours-utilisateur">Parcours utilisateur</a></li>
+<li><a href="#5-périmètre-fonctionnel">Périmètre fonctionnel</a></li>
+<li><a href="#6-architecture-technique">Architecture technique</a></li>
+<li><a href="#7-sécurité--conformité">Sécurité & conformité</a></li>
+<li><a href="#8-identité-visuelle">Identité visuelle</a></li>
+<li><a href="#9-distribution">Distribution</a></li>
+<li><a href="#10-coûts-dexploitation">Coûts d'exploitation</a></li>
+<li><a href="#11-limites-actuelles--roadmap">Limites actuelles & roadmap</a></li>
+<li><a href="#12-glossaire">Glossaire</a></li>
+</ol>
+<hr/>
+<h1 id="1-prsentation">1. Présentation</h1>
+<p><strong>AVA</strong> est une application mobile et web qui permet aux artisans français — en particulier ceux des DROM (départements et régions d'outre-mer) — de gérer toute leur administration <strong>par la voix</strong>, sans formulaires, sans clavier.</p>
+<p>L'artisan parle à AVA comme à une assistante humaine :</p>
+<p>> « Facture pour Monsieur Payet, 3 heures de plomberie à 55 euros. »</p>
+<p>AVA comprend la commande, prépare un brouillon de facture conforme à la loi française, le présente à l'artisan pour validation, puis l'enregistre, le numérote, et permet de l'envoyer au client.</p>
+<p><strong>Slogan interne</strong> : « L'OS administratif des indépendants. »</p>
+<p><strong>Cible métier prioritaire</strong> : artisans du bâtiment, plomberie, électricité, menuiserie, peinture, et services à la personne, basés à La Réunion (974), Mayotte (976), Guadeloupe (971), Martinique (972), Guyane (973). TVA par défaut adaptée 8,5 %.</p>
+<p><strong>État</strong> : application déployée en production (https://ava-lou.vercel.app) et publiée sur <strong>Apple TestFlight</strong> (build 1.0). 38 versions itératives livrées en mai 2026.</p>
+<hr/>
+<h1 id="2-utilisateur-cible-contexte">2. Utilisateur cible & contexte</h1>
+<h2 id="21-profil-principal-lou-">2.1 Profil principal — « Lou »</h2>
+<ul>
+<li>Artisan de 35 à 60 ans</li>
+<li>Travaille seule ou avec 1-2 personnes</li>
+<li>Mobile toute la journée (chantier, route, bureau improvisé dans le pickup)</li>
+<li>Souvent les mains occupées (gants, outils, peinture)</li>
+<li>Maîtrise le français mais pas l'orthographe administrative</li>
+<li>A un iPhone OU un Android, principalement</li>
+<li>N'aime pas remplir des formulaires</li>
+<li>Communique avec ses clients à 90 % via <strong>WhatsApp</strong> et SMS</li>
+<li>A un comptable ou un Centre de Gestion Agréé qui demande des CSV ou PDF en fin de mois</li>
+</ul>
+<h2 id="22-pain-points-rsolus">2.2 Pain points résolus</h2>
+<table><thead><tr><th>Pain point</th><th>Solution AVA</th></tr></thead><tbody>
+<tr><td>« Je tape mal sur le téléphone »</td><td>Tout par la voix</td></tr>
+<tr><td>« Je perds des heures à faire mes factures le soir »</td><td>30 secondes par dictée</td></tr>
+<tr><td>« Mes tickets de caisse traînent dans la boîte à gants »</td><td>Photo OCR → dépense créée en 3s</td></tr>
+<tr><td>« Mon comptable me harcèle pour le CSV »</td><td>Bouton "Télécharger CSV" formaté Excel français</td></tr>
+<tr><td>« Les clients paient en retard »</td><td>Page Relances avec mailto pré-rempli en 1 tap</td></tr>
+<tr><td>« Je veux que mes clients paient en ligne par CB »</td><td>Lien Stripe/SumUp inclus dans les emails</td></tr>
+<tr><td>« Je ne sais jamais où j'en suis »</td><td>Page d'accueil contextuelle + résumé hebdo vocal</td></tr>
+</tbody></table>
+<h2 id="23-anti-personas">2.3 Anti-personas</h2>
+<p>AVA n'est <strong>pas</strong> conçue pour :</p>
+<ul>
+<li>Les grandes structures (>5 personnes) qui ont besoin d'ERP</li>
+<li>Les commerces avec inventaire (pas de gestion de stock)</li>
+<li>Les freelances tech / créatifs basés en métropole pure (TVA 20 % seulement) — ils peuvent utiliser, mais l'optimisation DROM ne les concerne pas</li>
+</ul>
+<hr/>
+<h1 id="3-promesse-produit">3. Promesse produit</h1>
+<h2 id="31-voice-first-vraie">3.1 Voice-first vraie</h2>
+<p>AVA n'est <strong>pas</strong> une app classique avec un bouton micro en bonus. <strong>La voix est le mode d'entrée principal</strong>, et <strong>la voix est aussi un mode de sortie</strong> : AVA répond oralement quand on lui pose une question.</p>
+<p>Exemples :</p>
+<table><thead><tr><th>L'artisan dit</th><th>AVA fait</th></tr></thead><tbody>
+<tr><td>« Facture pour M. Payet, 3 heures à 55 € »</td><td>Brouillon facture pré-rempli</td></tr>
+<tr><td>« Devis Mme Hoarau, pose carrelage 25 m² à 45 € plus déplacement 80 € »</td><td>Devis 2 lignes</td></tr>
+<tr><td>« M. Payet a payé »</td><td>Marque la facture comme payée</td></tr>
+<tr><td>« Envoie le lien de paiement à Madame Hoarau »</td><td>Email pré-rempli avec lien Stripe + IBAN</td></tr>
+<tr><td>« Qu'est-ce qui rentre cette semaine ? »</td><td>AVA lit à voix haute le résumé</td></tr>
+<tr><td>« Mes relances »</td><td>Ouvre la liste des factures en retard</td></tr>
+<tr><td>« J'ai acheté du carrelage chez Point P pour 340 € »</td><td>Note de frais enregistrée</td></tr>
+</tbody></table>
+<h2 id="32-brouillon-dabord">3.2 Brouillon d'abord</h2>
+<p>Aucune action n'est définitive sans validation explicite de l'artisan. Tout passe par un écran de <strong>confirmation</strong> où le brouillon est éditable. Le slogan visuel de l'écran : <em>« Brouillon — rien n'est envoyé sans votre accord. »</em></p>
+<h2 id="33-conformit-franaise-par-dfaut">3.3 Conformité française par défaut</h2>
+<p>Toutes les factures et devis générés par AVA respectent automatiquement :</p>
+<ul>
+<li>Mentions légales obligatoires (art. <strong>L441-9</strong> du Code de commerce)</li>
+<li>Pénalités de retard (art. <strong>D441-5</strong>)</li>
+<li>Indemnité forfaitaire 40 € pour frais de recouvrement</li>
+<li>Mention « TVA non applicable, art. 293 B du CGI » pour les auto-entrepreneurs en franchise</li>
+<li>Médiateur de la consommation pour les clients particuliers (art. <strong>L612-1</strong>)</li>
+<li>TVA DROM 8,5 % par défaut quand l'artisan est basé en DROM</li>
+<li>Numérotation chronologique (FAC-2026-001, FAC-2026-002, …)</li>
+</ul>
+<p>L'artisan ne peut pas oublier une mention. AVA les ajoute toutes.</p>
+<hr/>
+<h1 id="4-parcours-utilisateur">4. Parcours utilisateur</h1>
+<h2 id="41-premier-lancement">4.1 Premier lancement</h2>
+<ol>
+<li>Lou ouvre AVA (TestFlight, App Store, ou https://ava-lou.vercel.app)</li>
+<li>Écran de connexion : saisit son email → reçoit un <strong>lien magique</strong> par mail</li>
+<li>Clique le lien → connectée</li>
+<li><strong>Wizard d'onboarding</strong> en 3 étapes apparaît :</li>
+</ol>
+<p>   - <strong>Étape 1</strong> : prénom + nom de l'entreprise + toggle « basé en DROM »</p>
+<p>   - <strong>Étape 2</strong> : SIRET (avec bouton <strong>Vérifier</strong> qui interroge data.gouv et pré-remplit la raison sociale)</p>
+<p>   - <strong>Étape 3</strong> : IBAN + BIC + nom de la banque</p>
+<ol>
+<li>Validation → la page d'accueil personnalisée s'affiche</li>
+</ol>
+<h2 id="42-page-daccueil">4.2 Page d'accueil</h2>
+<p>Affiche, dans cet ordre, et adapté à l'heure de la journée :</p>
+<ul>
+<li><strong>Bandeau salutation contextuel</strong> : <em>« Bonne matinée, Lou. ● 2 factures en retard, 1 240 € à relancer. »</em> avec un bouton ▶ pour qu'AVA lise la phrase</li>
+<li><strong>Bandeau profil incomplet</strong> (warm yellow) si SIRET ou raison sociale manquant</li>
+<li><strong>Notifications proactives</strong> (récap hebdo du lundi, etc.)</li>
+<li><strong>Insight stratégique</strong> d'AVA Conseillère (généré chaque dimanche soir)</li>
+<li><strong>Prochain rendez-vous</strong> du jour</li>
+<li><strong>Hint d'installation</strong> PWA si pas encore installé en home screen</li>
+<li><strong>Tuiles raccourcis</strong> (6 tiles 2×3) :</li>
+</ul>
+<p>  - Historique vocal</p>
+<p>  - Insights / Conseils</p>
+<p>  - Récurrents (factures auto)</p>
+<p>  - Comptabilité (CSV expert-comptable)</p>
+<p>  - Bilan annuel</p>
+<p>  - Relances (colorée jaune si retards en cours)</p>
+<ul>
+<li><strong>Mic dock flottant</strong> en bas — toujours visible</li>
+</ul>
+<h2 id="43-flux-vocal">4.3 Flux vocal</h2>
+<ol>
+<li>Tap sur le micro → écran <strong>Listen</strong> (fond navy, waveform animée)</li>
+<li>L'artisan parle ; relâche le doigt → audio uploadé</li>
+<li><strong>Whisper</strong> (OpenAI) transcrit en français</li>
+<li><strong>Claude Sonnet 4.5</strong> (Anthropic) extrait l'intention + entités structurées en JSON</li>
+<li>Si l'intention crée un document : écran <strong>Confirm</strong> avec brouillon éditable + bouton ▶ TTS</li>
+<li>L'artisan édite si besoin → tape « Confirmer »</li>
+<li>Document créé en base, numéroté, écran <strong>Success</strong> (AVA dit à voix haute « Facture FAC-2026-014 créée »)</li>
+</ol>
+<h2 id="44-photo-ocr-pour-les-notes-de-frais">4.4 Photo OCR pour les notes de frais</h2>
+<ol>
+<li>Lou ouvre <code>/depenses/nouvelle</code></li>
+<li>Tap sur <strong>« 📷 Prendre une photo »</strong> (en haut, carte warm yellow)</li>
+<li>La caméra de l'iPhone s'ouvre → photo du ticket</li>
+<li>Upload → <strong>GPT-4o Vision</strong> extrait : fournisseur, montant TTC, date, catégorie (matériel, restauration, déplacement, etc.), libellé</li>
+<li>Le formulaire est pré-rempli en 3 secondes</li>
+<li>Lou vérifie → tap <strong>Enregistrer</strong></li>
+</ol>
+<p>Temps total : <strong>5 secondes</strong> au lieu de 30.</p>
+<h2 id="45-envoi-de-facture-au-client">4.5 Envoi de facture au client</h2>
+<p>Sur l'écran de la facture créée :</p>
+<ul>
+<li>Bouton <strong>Envoyer par email</strong> → ouvre l'app email de l'iPhone avec un brouillon pré-rempli (sujet, corps, lien public signé vers la facture)</li>
+<li>Bouton <strong>Télécharger PDF</strong> → PDF A4 mentions légales conformes</li>
+<li>Bouton <strong>Voir en ligne</strong> → page publique partageable</li>
+<li>Sur la page publique : bouton <strong>Partager</strong> → bottom sheet avec <strong>WhatsApp</strong> (numéro pré-rempli, message FR pré-rédigé) + Copier le lien</li>
+<li>Si l'artisan a configuré un lien Stripe/SumUp dans ses paramètres, l'email contient <strong>deux options</strong> : 💳 régler par CB en 1 clic + 📄 voir la facture (avec IBAN)</li>
+</ul>
+<h2 id="46-comptable-fin-de-mois">4.6 Comptable / fin de mois</h2>
+<p>Page <strong>/comptabilite</strong> :</p>
+<ul>
+<li><strong>Aperçu YTD</strong> : recettes payées, en attente, dépenses, résultat net</li>
+<li><strong>Pré-déclaration TVA mensuelle</strong> : sélection du mois → calcul automatique TVA collectée vs déductible par taux (8,5 %, 20 %, etc.) → solde à reverser estimé</li>
+<li><strong>Export CSV</strong> : 3 boutons (factures, devis, dépenses) + 5 plages de période (YTD, année précédente, trimestre/mois précédent, période personnalisée)</li>
+</ul>
+<p>Format CSV : séparateur point-virgule, UTF-8 BOM (Excel français-friendly), montants <code>1 234,56 €</code>, dates <code>JJ/MM/AAAA</code>. Compatible Pennylane, Sellsy, EBP, Quadra, Sage.</p>
+<p>Page <strong>/bilan</strong> :</p>
+<ul>
+<li>Vue annuelle avec barres mensuelles (recettes vs dépenses)</li>
+<li>Bloc TVA estimée</li>
+<li>Bouton <strong>Télécharger PDF</strong> → bilan A4 portrait pour expert-comptable</li>
+</ul>
+<hr/>
+<h1 id="5-primtre-fonctionnel">5. Périmètre fonctionnel</h1>
+<h2 id="51-modules-principaux">5.1 Modules principaux</h2>
+<h3 id="a-authentification">A. Authentification</h3>
+<ul>
+<li><strong>Magic link email</strong> via Supabase Auth (lien sécurisé envoyé par email, sans mot de passe)</li>
+<li>Session persistante (cookies httpOnly)</li>
+<li>Déconnexion depuis Paramètres</li>
+<li>RLS PostgreSQL : chaque utilisateur ne voit que ses propres données</li>
+</ul>
+<h3 id="b-clients">B. Clients</h3>
+<ul>
+<li>CRUD complet (nom, email, téléphone, adresse, SIRET si pro, notes, type B2B/B2C)</li>
+<li>Recherche en temps réel</li>
+<li>Auto-création depuis le flux vocal (si AVA entend un nom inconnu)</li>
+<li>Match flou : « Payet » trouve « M. Payet » et inversement</li>
+<li>Seed automatique de 3 clients de démo au premier login (pour ne pas afficher une page vide)</li>
+</ul>
+<h3 id="c-factures">C. Factures</h3>
+<ul>
+<li>CRUD complet</li>
+<li>Lignes multiples (plusieurs prestations, taux de TVA mixtes)</li>
+<li>4 statuts : brouillon, envoyée, payée, en retard</li>
+<li>Numérotation atomique (pas de race condition même en cas de double-tap)</li>
+<li>Export PDF mentions légales conformes</li>
+<li>Page publique partageable (URL signée HMAC)</li>
+<li>Bouton <strong>Dupliquer</strong> pour clients récurrents</li>
+<li>Auto-passage en <code>en_retard</code> chaque matin si échéance dépassée (cron quotidien)</li>
+</ul>
+<h3 id="d-devis">D. Devis</h3>
+<ul>
+<li>CRUD complet</li>
+<li>5 statuts : brouillon, envoyé, accepté, refusé, expiré</li>
+<li>Bouton <strong>Convertir en facture</strong> (échéance auto à +30j)</li>
+<li>Auto-passage en <code>expiré</code> chaque matin si date de validité dépassée</li>
+</ul>
+<h3 id="e-notes-de-frais-dpenses">E. Notes de frais (dépenses)</h3>
+<ul>
+<li>CRUD complet</li>
+<li>8 catégories : matériel, déplacement, sous-traitance, restauration, téléphonie, outillage, formation, autre</li>
+<li><strong>Photo OCR</strong> (GPT-4o Vision) pour saisie ultra-rapide</li>
+<li>TVA déductible estimée</li>
+</ul>
+<h3 id="f-rendez-vous">F. Rendez-vous</h3>
+<ul>
+<li>CRUD léger (titre, date+heure, durée, client, lieu)</li>
+<li>Reconnaissance des dates en français : « demain », « lundi prochain », « vendredi en huit »</li>
+<li>Affichage du jour sur la home</li>
+</ul>
+<h3 id="g-factures-rcurrentes">G. Factures récurrentes</h3>
+<ul>
+<li>Templates avec cadence (mensuel, bimestriel, trimestriel, semestriel, annuel, jours custom)</li>
+<li>Date de fin optionnelle</li>
+<li>Génération automatique chaque matin à 06:00 UTC</li>
+</ul>
+<h3 id="h-ava-conseillre-insights">H. AVA Conseillère (insights)</h3>
+<ul>
+<li>Génération hebdomadaire chaque dimanche soir via Claude</li>
+<li>Analyse des 90 derniers jours</li>
+<li>Catégories : alerte, opportunité, observation</li>
+<li>Lecture vocale TTS sur chaque carte</li>
+</ul>
+<h3 id="i-relances">I. Relances</h3>
+<ul>
+<li>Page dédiée <code>/relances</code> avec deux sections :</li>
+</ul>
+<p>  - <strong>En retard</strong> (échéance dépassée, ton ferme)</p>
+<p>  - <strong>Échéance proche</strong> (J-3 à J0, ton anticipateur)</p>
+<ul>
+<li>Bouton <strong>Relancer</strong> par ligne → mailto pré-rempli avec sujet, corps, lien public signé, signature</li>
+</ul>
+<h3 id="j-lien-de-paiement-en-ligne">J. Lien de paiement en ligne</h3>
+<ul>
+<li>L'artisan colle son lien Stripe Payment Link / SumUp / PayPal.me / Lydia dans Paramètres une fois pour toutes</li>
+<li>Inclus automatiquement dans les emails <code>send_payment_link</code></li>
+</ul>
+<h3 id="k-comptabilit-bilan">K. Comptabilité & bilan</h3>
+<ul>
+<li>Pré-déclaration TVA mensuelle (CA3-ready)</li>
+<li>Export CSV multi-périodes</li>
+<li>Bilan annuel HTML + PDF</li>
+</ul>
+<h3 id="l-voix-dava-tts">L. Voix d'AVA (TTS)</h3>
+<ul>
+<li>Bouton ▶ sur tous les écrans qui affichent une réponse d'AVA</li>
+<li>Auto-lecture sur les intents de consultation (statut financier, insights, recherche)</li>
+<li>Voix « Shimmer » d'OpenAI, parlée à 95 % de la vitesse normale (clarté français)</li>
+<li>Toggle dans Paramètres pour désactiver l'auto-play</li>
+</ul>
+<h3 id="m-pwa-offline">M. PWA & offline</h3>
+<ul>
+<li>Manifest pour installation sur l'écran d'accueil iOS/Android</li>
+<li>Service Worker pour mise en cache des assets statiques</li>
+<li>Page <code>/offline</code> propre (pas de mutations offline pour éviter les conflits de synchronisation)</li>
+</ul>
+<h2 id="52-intentions-vocales-reconnues-15">5.2 Intentions vocales reconnues (15)</h2>
+<table><thead><tr><th>Intent</th><th>Exemple</th></tr></thead><tbody>
+<tr><td><code>create_invoice</code></td><td>« Facture pour M. Payet, 3 heures à 55 € »</td></tr>
+<tr><td><code>create_quote</code></td><td>« Devis Mme Hoarau, pose carrelage 25 m² à 45 € »</td></tr>
+<tr><td><code>mark_paid</code></td><td>« M. Payet a payé »</td></tr>
+<tr><td><code>send_reminder</code></td><td>« Relance Mme Hoarau »</td></tr>
+<tr><td><code>send_payment_link</code></td><td>« Envoie le lien de paiement à M. Payet »</td></tr>
+<tr><td><code>send_document</code></td><td>« Envoie la facture de M. Payet »</td></tr>
+<tr><td><code>find_document</code></td><td>« Trouve la facture de M. Técher du mois dernier »</td></tr>
+<tr><td><code>sign_document</code></td><td>« Demande la signature à Mme Grondin »</td></tr>
+<tr><td><code>get_financial_status</code></td><td>« Qu'est-ce qui rentre cette semaine ? »</td></tr>
+<tr><td><code>get_invoice_list</code></td><td>« Mes factures impayées »</td></tr>
+<tr><td><code>get_insights</code></td><td>« Tes conseils »</td></tr>
+<tr><td><code>get_weekly_summary</code></td><td>« Résume ma semaine »</td></tr>
+<tr><td><code>list_relances</code></td><td>« Mes relances »</td></tr>
+<tr><td><code>schedule_appointment</code></td><td>« RDV chez M. Payet vendredi à 14h »</td></tr>
+<tr><td><code>create_expense_note</code></td><td>« J'ai acheté du carrelage chez Point P pour 340 € »</td></tr>
+</tbody></table>
+<hr/>
+<h1 id="6-architecture-technique">6. Architecture technique</h1>
+<h2 id="61-stack">6.1 Stack</h2>
+<table><thead><tr><th>Couche</th><th>Technologie</th><th>Rôle</th></tr></thead><tbody>
+<tr><td>Frontend Web</td><td>Next.js 16 (App Router) + React 19 + TypeScript</td><td>App principale</td></tr>
+<tr><td>Mobile iOS / Android</td><td>Capacitor 8 (wrap Next.js)</td><td>Distribution App Store / Play Store</td></tr>
+<tr><td>Base de données</td><td>PostgreSQL (via Supabase)</td><td>Toutes les données métier</td></tr>
+<tr><td>Authentification</td><td>Supabase Auth (magic link)</td><td>Login sans mot de passe</td></tr>
+<tr><td>Stockage fichiers</td><td>Supabase Storage</td><td>(Réservé pour V2 — uploads scans)</td></tr>
+<tr><td>Hébergement</td><td>Vercel (production = main, previews = PRs)</td><td>Déploiement automatique</td></tr>
+<tr><td>CI / CD</td><td>GitHub Actions</td><td>Lint + build sur chaque push</td></tr>
+<tr><td>Cron jobs</td><td>Vercel Cron</td><td>Tâches planifiées</td></tr>
+<tr><td>Voice → texte</td><td>OpenAI Whisper API (<code>whisper-1</code>)</td><td>Transcription française</td></tr>
+<tr><td>Intent extraction</td><td>Anthropic Claude Sonnet 4.5</td><td>Comprendre la dictée</td></tr>
+<tr><td>Photo OCR</td><td>OpenAI GPT-4o-mini Vision</td><td>Lecture des tickets</td></tr>
+<tr><td>Voix de sortie</td><td>OpenAI TTS-1 (voix Shimmer)</td><td>AVA parle</td></tr>
+<tr><td>PDF</td><td>@react-pdf/renderer (pure JS)</td><td>Factures, devis, bilan</td></tr>
+<tr><td>Lookup SIRET</td><td>data.gouv recherche-entreprises</td><td>Auto-remplissage</td></tr>
+</tbody></table>
+<h2 id="62-schma-de-donnes-simplifi">6.2 Schéma de données (simplifié)</h2>
+<p>11 tables, toutes avec RLS (Row Level Security PostgreSQL) — chaque utilisateur ne peut accéder qu'à ses propres lignes.</p>
+<table><thead><tr><th>Table</th><th>Contenu</th></tr></thead><tbody>
+<tr><td><code>profiles</code></td><td>Identité de l'artisan (nom, SIRET, IBAN, lien Stripe, prefs TTS, etc.)</td></tr>
+<tr><td><code>clients</code></td><td>Carnet de clients</td></tr>
+<tr><td><code>invoices</code></td><td>Factures (numéro, montants, statut, line_items en JSON)</td></tr>
+<tr><td><code>quotes</code></td><td>Devis (idem invoices)</td></tr>
+<tr><td><code>expenses</code></td><td>Notes de frais</td></tr>
+<tr><td><code>recurring_invoices</code></td><td>Templates de factures récurrentes</td></tr>
+<tr><td><code>appointments</code></td><td>Rendez-vous</td></tr>
+<tr><td><code>ava_actions</code></td><td>Trace de chaque dictée vocale (idempotence + audit)</td></tr>
+<tr><td><code>notifications</code></td><td>Bandeaux proactifs sur la home</td></tr>
+<tr><td><code>insights</code></td><td>Conseils générés chaque dimanche</td></tr>
+<tr><td><code>auth.users</code> (Supabase)</td><td>Users + sessions</td></tr>
+</tbody></table>
+<h2 id="63-endpoints-api">6.3 Endpoints API</h2>
+<p>~30 endpoints REST (Next.js App Router). Exemples :</p>
+<ul>
+<li><code>POST /api/transcribe</code> — audio → texte (Whisper)</li>
+<li><code>POST /api/intent</code> — texte → intent JSON (Claude)</li>
+<li><code>POST /api/actions/[id]/confirm</code> — exécute l'action après validation</li>
+<li><code>POST /api/expense-from-photo</code> — photo → expense JSON (Vision)</li>
+<li><code>POST /api/tts</code> — texte → audio (TTS)</li>
+<li><code>GET /api/factures/[id]/pdf?public=1&amp;t=...</code> — PDF facture</li>
+<li><code>GET /api/bilan/pdf?year=YYYY</code> — PDF bilan annuel</li>
+<li><code>GET /api/export?dataset=invoices&amp;from=...&amp;to=...</code> — CSV</li>
+<li><code>GET /api/tva-monthly?month=YYYY-MM</code> — pré-déclaration TVA</li>
+<li><code>GET /api/cron/recurring</code> — cron quotidien</li>
+<li><code>GET /api/cron/weekly</code> — cron lundi (récap)</li>
+<li><code>GET /api/cron/insights</code> — cron dimanche (insights)</li>
+</ul>
+<h2 id="64-cron-jobs">6.4 Cron jobs</h2>
+<table><thead><tr><th>Cron</th><th>Cadence</th><th>Rôle</th></tr></thead><tbody>
+<tr><td><code>/api/cron/recurring</code></td><td>Tous les jours à 06:00 UTC</td><td>Génère les factures récurrentes dues, marque les factures en retard, expire les devis périmés</td></tr>
+<tr><td><code>/api/cron/weekly</code></td><td>Lundi à 07:30 UTC</td><td>Récap de la semaine en notification</td></tr>
+<tr><td><code>/api/cron/insights</code></td><td>Dimanche à 18:00 UTC</td><td>Génère les insights AVA Conseillère</td></tr>
+</tbody></table>
+<p>Auth : header <code>Authorization: Bearer $CRON_SECRET</code> injecté automatiquement par Vercel quand la variable est définie.</p>
+<h2 id="65-flux-vocal-dtaill">6.5 Flux vocal détaillé</h2>
+<pre><code>[App mobile/web]
+  │
+  ├── 1. Capture audio (MediaRecorder, format webm/opus)
+  │
+  ├── 2. POST /api/transcribe → OpenAI Whisper
+  │       └─ Retour : transcript texte FR
+  │
+  ├── 3. POST /api/intent → Claude Sonnet 4.5
+  │       └─ Retour : { intent, entities, confidence, ava_response }
+  │
+  ├── 4. Server-side enrichissement (selon intent)
+  │       └─ Recherche client, agrégation totals, etc.
+  │
+  ├── 5. Insertion en base ava_actions (statut: pending)
+  │
+  ├── 6. Affichage écran /confirm/[id]
+  │       └─ TTS optionnel : POST /api/tts → audio mp3 → lecture
+  │
+  └── 7. Sur validation : POST /api/actions/[id]/confirm
+          ├─ Atomic claim (status pending → executing)
+          ├─ Insertion réelle (invoice, quote, expense, etc.)
+          └─ Redirection /success/[id]</code></pre>
+<p>Garde-fous :</p>
+<ul>
+<li>Timeout Whisper 25 s + retry une fois</li>
+<li>Timeout Claude 20 s + JSON validé par schema Zod</li>
+<li>Confidence < 0,5 → écran fallback avec formulaire manuel</li>
+<li>Idempotence : double-tap sur "Confirmer" ne crée pas deux factures</li>
+<li>Numérotation atomique avec retry sur conflit UNIQUE</li>
+</ul>
+<hr/>
+<h1 id="7-scurit-conformit">7. Sécurité & conformité</h1>
+<h2 id="71-authentification-isolation">7.1 Authentification & isolation</h2>
+<ul>
+<li><strong>Pas de mot de passe</strong> côté utilisateur (magic link uniquement)</li>
+<li><strong>RLS PostgreSQL</strong> sur toutes les tables : <code>auth.uid() = user_id</code></li>
+<li>Sessions stockées en cookies httpOnly + Secure</li>
+<li>Service role key Supabase jamais exposée côté client</li>
+</ul>
+<h2 id="72-urls-publiques-signes">7.2 URLs publiques signées</h2>
+<p>Les pages <code>/voir/facture/[id]</code> et <code>/voir/devis/[id]</code> sont accessibles sans authentification (pour permettre au client de consulter sa facture). Pour éviter qu'un UUID fuité ne donne accès à une facture, chaque URL contient un <strong>token HMAC-SHA256</strong> :</p>
+<pre><code>https://ava-lou.vercel.app/voir/facture/abc-123?t=&lt;hmac-22-chars&gt;</code></pre>
+<p>Mode souple (par défaut) : tokens manquants acceptés (compatibilité emails déjà envoyés).</p>
+<p>Mode strict : <code>NEXT_PUBLIC_PUBLIC_URL_REQUIRE_TOKEN=true</code> rejette tout token manquant ou invalide.</p>
+<h2 id="73-crons-protgs">7.3 Crons protégés</h2>
+<p>Les 3 endpoints cron exigent <code>Authorization: Bearer $CRON_SECRET</code>. Un appel sans le secret renvoie 401. Le secret est injecté automatiquement par Vercel.</p>
+<h2 id="74-anti-injection-csv">7.4 Anti-injection CSV</h2>
+<p>L'export CSV préfixe d'un apostrophe toute valeur commençant par <code>=</code>, <code>+</code>, <code>-</code>, <code>@</code> ou tabulation, pour neutraliser les attaques de type formula injection (qui exécuterait du code dans Excel chez le comptable).</p>
+<h2 id="75-rgpd">7.5 RGPD</h2>
+<ul>
+<li>Données stockées en Europe (Supabase région <code>eu-west-3</code>, Paris)</li>
+<li>Service role key chiffrée en repos (Supabase)</li>
+<li>Aucune transmission tierce non documentée :</li>
+</ul>
+<p>  - Whisper, Claude, GPT-4o, TTS : OpenAI/Anthropic, transit pour traitement, pas de stockage côté provider (zero-retention via plan API)</p>
+<p>  - data.gouv : recherche-entreprises (open data, anonyme)</p>
+<ul>
+<li>Pages <code>/legal/cgu</code> et <code>/legal/privacy</code> complètes</li>
+<li>Suppression de compte sur demande (à formaliser V2)</li>
+</ul>
+<h2 id="76-conformit-facturation">7.6 Conformité facturation</h2>
+<ul>
+<li>Numérotation chronologique sans trou (FAC-AAAA-XXX)</li>
+<li>Mentions L441-9 sur chaque facture</li>
+<li>Pénalités D441-5 + indemnité 40 €</li>
+<li>TVA intracommunautaire si fournie</li>
+<li>Médiateur consommation pour B2C</li>
+<li>Possibilité de mention « TVA non applicable, art. 293 B du CGI »</li>
+<li>Conservation 10 ans assurée par la base PostgreSQL</li>
+</ul>
+<h2 id="77-points-dattention-restants">7.7 Points d'attention restants</h2>
+<ul>
+<li>Activation du mode strict signed URLs (env var à flipper)</li>
+<li>Double opt-in sur le flag de consentement Whisper/Claude (audit P1) — actuellement les noms clients transitent</li>
+<li>Suppression de compte avec purge complète (RGPD art. 17)</li>
+<li>Audit log des actions sensibles (V2)</li>
+</ul>
+<hr/>
+<h1 id="8-identit-visuelle">8. Identité visuelle</h1>
+<h2 id="81-direction-artistique-onde-">8.1 Direction artistique « Onde »</h2>
+<ul>
+<li><strong>Palette</strong> : warm bone (<code>#F4F3EE</code>), navy ink (<code>#0B1D33</code>), accent vert (<code>#1F9D55</code>), accent orange chaleureux (<code>#E87B3A</code>), pas de gradients</li>
+<li><strong>Bordures</strong> : 1 px, hairline (<code>#E5E3DA</code>), pas d'ombres</li>
+<li><strong>Coins</strong> : radius 14 px sur les cards, 12 px sur les inputs, 18 px sur les boutons</li>
+<li><strong>Polices</strong> :</li>
+</ul>
+<p>  - Titres : <strong>Instrument Serif</strong> (Google Fonts)</p>
+<p>  - Texte courant : <strong>Inter Tight</strong> (self-hosted)</p>
+<p>  - Chiffres : tabular numerals partout</p>
+<ul>
+<li><strong>Iconographie</strong> : Lucide React, stroke 1,5 px</li>
+<li><strong>Pas d'emoji</strong> dans le produit (sauf rare pour l'utilisateur)</li>
+<li><strong>Vouvoiement</strong> systématique (tutoiement disponible en option mais déconseillé brand-wise)</li>
+</ul>
+<h2 id="82-ton-de-voix">8.2 Ton de voix</h2>
+<ul>
+<li>Public-service français sobre</li>
+<li>Phrases courtes</li>
+<li>Aucun jargon administratif inutile</li>
+<li>Aucun marketing fluff</li>
+<li>Disclaimer toujours présent quand l'argent est en jeu : <em>« Brouillon — rien n'est envoyé sans votre accord. »</em></li>
+</ul>
+<hr/>
+<h1 id="9-distribution">9. Distribution</h1>
+<h2 id="91-web-production">9.1 Web (production)</h2>
+<ul>
+<li><strong>URL</strong> : https://ava-lou.vercel.app</li>
+<li><strong>PWA installable</strong> sur iOS Safari (Partager → Sur l'écran d'accueil) et Android Chrome</li>
+<li>Mises à jour : continues, automatiques à chaque push sur <code>main</code></li>
+</ul>
+<h2 id="92-ios-testflight">9.2 iOS (TestFlight)</h2>
+<ul>
+<li><strong>Bundle ID</strong> : <code>fr.digidatale.ava</code></li>
+<li><strong>App Store Connect ID</strong> : <code>6766485791</code></li>
+<li><strong>Build courant</strong> : 1.0 (1), expire le 2026-08-03</li>
+<li><strong>Min OS</strong> : iOS 15.0</li>
+<li>Signing : Apple Distribution (cert valide jusqu'en mai 2027)</li>
+<li>Provisioning profile : « AVA App Store 2026-05-05 » (valide 1 an)</li>
+</ul>
+<h2 id="93-android-play-store">9.3 Android (Play Store)</h2>
+<ul>
+<li><strong>Package ID</strong> : <code>fr.digidatale.ava</code></li>
+<li>Projet Android Capacitor prêt</li>
+<li>Pas encore publié — V2</li>
+</ul>
+<hr/>
+<h1 id="10-cots-dexploitation">10. Coûts d'exploitation</h1>
+<p>Estimations pour <strong>100 utilisateurs actifs</strong>, 50 dictées vocales/mois chacun :</p>
+<table><thead><tr><th>Poste</th><th>Coût mensuel estimé</th></tr></thead><tbody>
+<tr><td>Vercel Hobby (ou Pro 20 $/mois pour multi-tenant prod)</td><td>0 → 20 $</td></tr>
+<tr><td>Supabase Free (jusqu'à 500 Mo + 2 Go bandwidth)</td><td>0 → 25 $</td></tr>
+<tr><td>OpenAI Whisper (~0,006 $/min) — 100 users × 50 dictées × 30 s</td><td>~15 $</td></tr>
+<tr><td>Anthropic Claude (~0,003 $ par intent) — 100 × 50 = 5 000 calls</td><td>~15 $</td></tr>
+<tr><td>OpenAI GPT-4o-mini Vision (~0,001 $/photo) — 100 × 30 photos</td><td>~3 $</td></tr>
+<tr><td>OpenAI TTS (~0,015 $/1k chars) — usage modéré</td><td>~5 $</td></tr>
+<tr><td><strong>Total</strong></td><td><strong>~85 $/mois</strong></td></tr>
+</tbody></table>
+<p>Soit <strong>~0,85 $ par utilisateur actif/mois</strong> — sustainable à un prix d'abonnement de 9-15 €/mois par artisan.</p>
+<hr/>
+<h1 id="11-limites-actuelles-roadmap">11. Limites actuelles & roadmap</h1>
+<h2 id="111-ce-qui-est-livr-v0-v38">11.1 Ce qui est livré (V0 → V38)</h2>
+<ul>
+<li>38 versions itératives, 31 PRs mergées</li>
+<li>Voix bidirectionnelle complète</li>
+<li>15 intents vocaux reconnus</li>
+<li>Photo OCR notes de frais</li>
+<li>PDF factures + devis + bilan</li>
+<li>CSV multi-périodes</li>
+<li>TVA mensuelle CA3-ready</li>
+<li>Page Relances avec mailto pré-rempli</li>
+<li>Wizard onboarding 3 étapes</li>
+<li>Lien de paiement Stripe/SumUp/PayPal</li>
+<li>TestFlight build VALID</li>
+</ul>
+<h2 id="112-limites-connues">11.2 Limites connues</h2>
+<ul>
+<li>Pas d'envoi d'email automatisé serveur (aujourd'hui : mailto qui ouvre l'app email native du téléphone)</li>
+<li>Pas d'intégration Stripe Connect serveur (aujourd'hui : lien collé manuellement)</li>
+<li>Pas de notifications Push iOS/Android (aujourd'hui : badge notifications dans l'app uniquement)</li>
+<li>Pas de multi-utilisateur (un compte = un artisan ; pas de comptable invité en lecture)</li>
+<li>Pas d'OCR pour scanner un devis papier manuscrit (uniquement tickets imprimés)</li>
+<li>Pas de gestion de stocks / inventaire</li>
+<li>Pas d'intégration calendrier iOS/Google</li>
+<li>Pas de signature électronique des devis (le « Bon pour accord » est sur PDF, à signer à la main)</li>
+</ul>
+<h2 id="113-roadmap-v2-priorit-dcroissante">11.3 Roadmap V2 (priorité décroissante)</h2>
+<ol>
+<li><strong>Stripe Connect natif</strong> : génération de Payment Link à chaque facture + webhook pour <code>mark_paid</code> automatique</li>
+<li><strong>Email transactionnel via Resend</strong> : envoi depuis ava@digidatale.com sans dépendre de l'app email</li>
+<li><strong>Notifications Push</strong> (iOS + Android) : facture payée, échéance approchante, RDV imminent</li>
+<li><strong>Multi-utilisateur</strong> : comptable invité en lecture, secrétaire en write limité</li>
+<li><strong>OCR devis manuscrit</strong> : scanner un brouillon papier → AVA crée un devis numérique</li>
+<li><strong>Voice editing</strong> : « modifie la dernière facture, change le montant à 200 € »</li>
+<li><strong>Intégration calendrier</strong> (Apple Calendar, Google Calendar) pour les RDV</li>
+<li><strong>Signature électronique</strong> des devis (DocuSign-like, mais simple)</li>
+<li><strong>Insights V2</strong> : prédictions de trésorerie sur 60 jours</li>
+<li><strong>Internationalisation</strong> : Belgique, Suisse, Québec</li>
+</ol>
+<h2 id="114-hors-scope-long-terme">11.4 Hors-scope long terme</h2>
+<ul>
+<li>ERP complet (logistique, RH, achats centralisés)</li>
+<li>Marketplace de prestations</li>
+<li>Comparateur de devis fournisseurs</li>
+<li>App de pointage / planning multi-employés</li>
+</ul>
+<hr/>
+<h1 id="12-glossaire">12. Glossaire</h1>
+<table><thead><tr><th>Terme</th><th>Définition</th></tr></thead><tbody>
+<tr><td><strong>PWA</strong></td><td>Progressive Web App. Une page web qui peut s'installer sur l'écran d'accueil d'un téléphone et fonctionner comme une app native.</td></tr>
+<tr><td><strong>TestFlight</strong></td><td>Outil d'Apple pour tester une app iOS avant publication officielle sur l'App Store.</td></tr>
+<tr><td><strong>Capacitor</strong></td><td>Wrapper qui transforme une app web en app iOS/Android distribuable via les stores.</td></tr>
+<tr><td><strong>Whisper</strong></td><td>API de reconnaissance vocale d'OpenAI, particulièrement bonne en français.</td></tr>
+<tr><td><strong>Claude</strong></td><td>Modèle de langage d'Anthropic, utilisé pour comprendre les intentions de l'artisan.</td></tr>
+<tr><td><strong>GPT-4o Vision</strong></td><td>Modèle d'OpenAI capable d'analyser des images (ici : tickets de caisse).</td></tr>
+<tr><td><strong>TTS</strong></td><td>Text-to-Speech. Synthèse vocale qui transforme un texte en voix.</td></tr>
+<tr><td><strong>RLS</strong></td><td>Row Level Security. Mécanisme PostgreSQL qui restreint chaque utilisateur à ses propres lignes au niveau base de données.</td></tr>
+<tr><td><strong>HMAC</strong></td><td>Hash-based Message Authentication Code. Signature cryptographique qui prouve qu'une URL n'a pas été forgée.</td></tr>
+<tr><td><strong>CA3</strong></td><td>Formulaire mensuel de déclaration de TVA en France (régime réel normal).</td></tr>
+<tr><td><strong>DROM</strong></td><td>Départements et régions d'outre-mer (974, 976, 971, 972, 973, 978). TVA réduite à 8,5 %.</td></tr>
+<tr><td><strong>L441-9</strong></td><td>Article du Code de commerce qui liste les mentions obligatoires sur les factures.</td></tr>
+<tr><td><strong>D441-5</strong></td><td>Article qui fixe à 40 € l'indemnité forfaitaire de recouvrement en cas de retard.</td></tr>
+<tr><td><strong>SIRET</strong></td><td>Identifiant à 14 chiffres unique de chaque établissement d'entreprise française.</td></tr>
+<tr><td><strong>TVA intracommunautaire</strong></td><td>Numéro de TVA permettant les échanges B2B en Europe (préfixe FR).</td></tr>
+<tr><td><strong>Magic link</strong></td><td>Lien à usage unique envoyé par email pour se connecter sans mot de passe.</td></tr>
+<tr><td><strong>Brouillon</strong></td><td>État initial d'un document avant validation explicite. AVA respecte ce principe : rien n'est définitif sans accord.</td></tr>
+</tbody></table>
+<hr/>
+<p><em>Document généré le 6 mai 2026 à partir de la base de code AVA-Lou v0.38. Pour toute question : greg@gonnected.com.</em></p>
+
+</body>
+</html>
