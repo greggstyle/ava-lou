@@ -247,7 +247,7 @@ blockquote {
   <h1 id="cahier-des-charges-ava-lou">Cahier des charges — AVA-Lou</h1>
 <p><strong>L'OS administratif des indépendants</strong></p>
 <p><em>Voice-first invoicing pour artisans des DROM</em></p>
-<p>Version du 6 mai 2026 — Greg Hanffou</p>
+<p>Version v0.39 du 6 mai 2026 — Greg Hanffou</p>
 <hr/>
 <h2 id="sommaire">Sommaire</h2>
 <ol>
@@ -260,9 +260,10 @@ blockquote {
 <li><a href="#7-sécurité--conformité">Sécurité & conformité</a></li>
 <li><a href="#8-identité-visuelle">Identité visuelle</a></li>
 <li><a href="#9-distribution">Distribution</a></li>
-<li><a href="#10-coûts-dexploitation">Coûts d'exploitation</a></li>
-<li><a href="#11-limites-actuelles--roadmap">Limites actuelles & roadmap</a></li>
-<li><a href="#12-glossaire">Glossaire</a></li>
+<li><a href="#10-modèle-économique">Modèle économique</a></li>
+<li><a href="#11-coûts-dexploitation">Coûts d'exploitation</a></li>
+<li><a href="#12-limites-actuelles--roadmap">Limites actuelles & roadmap</a></li>
+<li><a href="#13-glossaire">Glossaire</a></li>
 </ol>
 <hr/>
 <h1 id="1-prsentation">1. Présentation</h1>
@@ -272,7 +273,7 @@ blockquote {
 <p>AVA comprend la commande, prépare un brouillon de facture conforme à la loi française, le présente à l'artisan pour validation, puis l'enregistre, le numérote, et permet de l'envoyer au client.</p>
 <p><strong>Slogan interne</strong> : « L'OS administratif des indépendants. »</p>
 <p><strong>Cible métier prioritaire</strong> : artisans du bâtiment, plomberie, électricité, menuiserie, peinture, et services à la personne, basés à La Réunion (974), Mayotte (976), Guadeloupe (971), Martinique (972), Guyane (973). TVA par défaut adaptée 8,5 %.</p>
-<p><strong>État</strong> : application déployée en production (https://ava-lou.vercel.app) et publiée sur <strong>Apple TestFlight</strong> (build 1.0). 38 versions itératives livrées en mai 2026.</p>
+<p><strong>État</strong> : application déployée en production (https://ava-lou.vercel.app) et publiée sur <strong>Apple TestFlight</strong> (build 1.0(2)). 39 versions itératives livrées en mai 2026.</p>
 <hr/>
 <h1 id="2-utilisateur-cible-contexte">2. Utilisateur cible & contexte</h1>
 <h2 id="21-profil-principal-lou-">2.1 Profil principal — « Lou »</h2>
@@ -450,7 +451,7 @@ blockquote {
 <ul>
 <li>CRUD complet</li>
 <li>8 catégories : matériel, déplacement, sous-traitance, restauration, téléphonie, outillage, formation, autre</li>
-<li><strong>Photo OCR</strong> (GPT-4o Vision) pour saisie ultra-rapide</li>
+<li><strong>Photo OCR</strong> (GPT-4o Vision) pour saisie ultra-rapide — ticket Point P / Leroy Merlin / restaurant / péage photographié → champs pré-remplis en 3 secondes</li>
 <li>TVA déductible estimée</li>
 </ul>
 <h3 id="f-rendez-vous">F. Rendez-vous</h3>
@@ -485,6 +486,14 @@ blockquote {
 <ul>
 <li>L'artisan colle son lien Stripe Payment Link / SumUp / PayPal.me / Lydia dans Paramètres une fois pour toutes</li>
 <li>Inclus automatiquement dans les emails <code>send_payment_link</code></li>
+</ul>
+<h3 id="j-bis-scanner-mon-rib-v39">J-bis. Scanner mon RIB (V39)</h3>
+<ul>
+<li>Bouton <strong>« 📷 Scanner mon RIB »</strong> dans le wizard d'onboarding et dans Paramètres</li>
+<li>L'artisan photographie son RIB papier ou une capture d'écran de son app banque</li>
+<li>GPT-4o Vision extrait IBAN, BIC, nom de banque, titulaire en 3 secondes</li>
+<li>Validation côté serveur : checksum mod-97 ISO 13616, longueur attendue par pays (FR=27, BE=16, DE=22, ES=24, IT=27, LU=20, MC=27, etc. — 17 pays SEPA)</li>
+<li>Si checksum suspect → message d'avertissement, autres champs pré-remplis quand même</li>
 </ul>
 <h3 id="k-comptabilit-bilan">K. Comptabilité & bilan</h3>
 <ul>
@@ -695,7 +704,7 @@ blockquote {
 <ul>
 <li><strong>Bundle ID</strong> : <code>fr.digidatale.ava</code></li>
 <li><strong>App Store Connect ID</strong> : <code>6766485791</code></li>
-<li><strong>Build courant</strong> : 1.0 (1), expire le 2026-08-03</li>
+<li><strong>Build courant</strong> : 1.0 (2), uploadé le 6 mai 2026 à 05:56 UTC</li>
 <li><strong>Min OS</strong> : iOS 15.0</li>
 <li>Signing : Apple Distribution (cert valide jusqu'en mai 2027)</li>
 <li>Provisioning profile : « AVA App Store 2026-05-05 » (valide 1 an)</li>
@@ -707,7 +716,35 @@ blockquote {
 <li>Pas encore publié — V2</li>
 </ul>
 <hr/>
-<h1 id="10-cots-dexploitation">10. Coûts d'exploitation</h1>
+<h1 id="10-modle-conomique">10. Modèle économique</h1>
+<h2 id="101-cible-saas-b2b-abonnement-mensuel">10.1 Cible : SaaS B2B abonnement mensuel</h2>
+<p>AVA est conçue comme un service par abonnement payé par l'artisan. Le modèle évite la dépendance publicitaire et aligne les intérêts : si AVA fait gagner du temps à l'artisan, il continue à payer.</p>
+<h2 id="102-hypothses-de-prix">10.2 Hypothèses de prix</h2>
+<p>Trois paliers pressentis (à valider en interview avec Lou et 5-10 artisans) :</p>
+<table><thead><tr><th>Plan</th><th>Prix mensuel</th><th>Inclus</th></tr></thead><tbody>
+<tr><td><strong>Découverte</strong></td><td>9 €</td><td>50 dictées vocales/mois, 30 photos OCR, 100 factures, 1 utilisateur</td></tr>
+<tr><td><strong>Pro</strong> (cible principale)</td><td>19 €</td><td>dictées vocales illimitées, OCR illimité, factures illimitées, page Relances, bilan PDF, export comptable</td></tr>
+<tr><td><strong>Équipe</strong> (V2)</td><td>39 € + 9 € / utilisateur additionnel</td><td>Pro + secrétaire ou comptable invité en lecture</td></tr>
+</tbody></table>
+<h2 id="103-priode-dessai">10.3 Période d'essai</h2>
+<p>14 jours d'essai sans carte bleue. Au jour 14, prompt « pour continuer à utiliser AVA, ajoutez votre moyen de paiement ».</p>
+<h2 id="104-bta-utilisateurs">10.4 Bêta-utilisateurs</h2>
+<p>Lou (cible originale) et les premiers artisans qui testent AVA bénéficient de <strong>6 mois gratuits</strong> puis tarif lancement (par exemple 12 € au lieu de 19 €) pendant la première année. Geste commercial pour récompenser la confiance de la première heure.</p>
+<h2 id="105-stripe-billing">10.5 Stripe Billing</h2>
+<p>L'encaissement passe par <strong>Stripe Billing</strong> (compte AVA <code>acct_1TTtt5D9fM8BIyAT</code>). Implémentation :</p>
+<ul>
+<li>Page <code>/abonnement</code> avec Stripe Checkout intégré</li>
+<li>Webhook <code>/api/stripe/webhook</code> qui synchronise <code>profiles.subscription_status</code> à chaque événement (<code>subscription.created</code>, <code>updated</code>, <code>deleted</code>, <code>payment_failed</code>)</li>
+<li>Middleware paywall qui redirige vers <code>/abonnement</code> si <code>subscription_status !== 'active'</code> au-delà de la période d'essai</li>
+</ul>
+<p>⚠️ <strong>Pas encore implémenté</strong> (V40+). Le compte Stripe AVA-Lou est aujourd'hui en <code>Review in progress</code> chez Stripe (validation 2-3 jours).</p>
+<h2 id="106-cohrence-avec-le-compte-stripe-de-lartisan">10.6 Cohérence avec le compte Stripe <strong>de l'artisan</strong></h2>
+<p>Important : il y a <strong>deux flux Stripe complètement séparés</strong>.</p>
+<table><thead><tr><th>Flux Stripe</th><th>Pour qui</th><th>Statut</th></tr></thead><tbody>
+<tr><td><strong>AVA encaisse l'abonnement de l'artisan</strong></td><td>Le compte AVA-Lou (notre compte)</td><td>À implémenter V40+</td></tr>
+<tr><td><strong>L'artisan encaisse ses propres clients via Payment Link</strong></td><td>Le compte Stripe de chaque artisan</td><td>✅ Déjà fait (V35) — l'artisan colle juste un lien</td></tr>
+</tbody></table>
+<h1 id="11-cots-dexploitation">11. Coûts d'exploitation</h1>
 <p>Estimations pour <strong>100 utilisateurs actifs</strong>, 50 dictées vocales/mois chacun :</p>
 <table><thead><tr><th>Poste</th><th>Coût mensuel estimé</th></tr></thead><tbody>
 <tr><td>Vercel Hobby (ou Pro 20 $/mois pour multi-tenant prod)</td><td>0 → 20 $</td></tr>
@@ -720,22 +757,23 @@ blockquote {
 </tbody></table>
 <p>Soit <strong>~0,85 $ par utilisateur actif/mois</strong> — sustainable à un prix d'abonnement de 9-15 €/mois par artisan.</p>
 <hr/>
-<h1 id="11-limites-actuelles-roadmap">11. Limites actuelles & roadmap</h1>
-<h2 id="111-ce-qui-est-livr-v0-v38">11.1 Ce qui est livré (V0 → V38)</h2>
+<h1 id="12-limites-actuelles-roadmap">12. Limites actuelles & roadmap</h1>
+<h2 id="121-ce-qui-est-livr-v0-v39">12.1 Ce qui est livré (V0 → V39)</h2>
 <ul>
-<li>38 versions itératives, 31 PRs mergées</li>
+<li>39 versions itératives, 33 PRs mergées</li>
 <li>Voix bidirectionnelle complète</li>
 <li>15 intents vocaux reconnus</li>
-<li>Photo OCR notes de frais</li>
+<li><strong>Photo OCR notes de frais</strong> (tickets de caisse)</li>
+<li><strong>Photo OCR RIB</strong> (IBAN/BIC/banque scan en 3 sec)</li>
 <li>PDF factures + devis + bilan</li>
 <li>CSV multi-périodes</li>
 <li>TVA mensuelle CA3-ready</li>
 <li>Page Relances avec mailto pré-rempli</li>
-<li>Wizard onboarding 3 étapes</li>
+<li>Wizard onboarding 3 étapes (avec scanner RIB)</li>
 <li>Lien de paiement Stripe/SumUp/PayPal</li>
-<li>TestFlight build VALID</li>
+<li>TestFlight build 1.0(2) uploadé</li>
 </ul>
-<h2 id="112-limites-connues">11.2 Limites connues</h2>
+<h2 id="122-limites-connues">12.2 Limites connues</h2>
 <ul>
 <li>Pas d'envoi d'email automatisé serveur (aujourd'hui : mailto qui ouvre l'app email native du téléphone)</li>
 <li>Pas d'intégration Stripe Connect serveur (aujourd'hui : lien collé manuellement)</li>
@@ -746,9 +784,10 @@ blockquote {
 <li>Pas d'intégration calendrier iOS/Google</li>
 <li>Pas de signature électronique des devis (le « Bon pour accord » est sur PDF, à signer à la main)</li>
 </ul>
-<h2 id="113-roadmap-v2-priorit-dcroissante">11.3 Roadmap V2 (priorité décroissante)</h2>
+<h2 id="123-roadmap-v2-priorit-dcroissante">12.3 Roadmap V2 (priorité décroissante)</h2>
 <ol>
-<li><strong>Stripe Connect natif</strong> : génération de Payment Link à chaque facture + webhook pour <code>mark_paid</code> automatique</li>
+<li><strong>Stripe Billing pour la monétisation AVA</strong> : abonnement mensuel artisan → AVA (cf §10)</li>
+<li><strong>Stripe Connect natif côté artisan</strong> : génération de Payment Link à chaque facture + webhook pour <code>mark_paid</code> automatique</li>
 <li><strong>Email transactionnel via Resend</strong> : envoi depuis ava@digidatale.com sans dépendre de l'app email</li>
 <li><strong>Notifications Push</strong> (iOS + Android) : facture payée, échéance approchante, RDV imminent</li>
 <li><strong>Multi-utilisateur</strong> : comptable invité en lecture, secrétaire en write limité</li>
@@ -759,7 +798,7 @@ blockquote {
 <li><strong>Insights V2</strong> : prédictions de trésorerie sur 60 jours</li>
 <li><strong>Internationalisation</strong> : Belgique, Suisse, Québec</li>
 </ol>
-<h2 id="114-hors-scope-long-terme">11.4 Hors-scope long terme</h2>
+<h2 id="124-hors-scope-long-terme">12.4 Hors-scope long terme</h2>
 <ul>
 <li>ERP complet (logistique, RH, achats centralisés)</li>
 <li>Marketplace de prestations</li>
@@ -767,7 +806,7 @@ blockquote {
 <li>App de pointage / planning multi-employés</li>
 </ul>
 <hr/>
-<h1 id="12-glossaire">12. Glossaire</h1>
+<h1 id="13-glossaire">13. Glossaire</h1>
 <table><thead><tr><th>Terme</th><th>Définition</th></tr></thead><tbody>
 <tr><td><strong>PWA</strong></td><td>Progressive Web App. Une page web qui peut s'installer sur l'écran d'accueil d'un téléphone et fonctionner comme une app native.</td></tr>
 <tr><td><strong>TestFlight</strong></td><td>Outil d'Apple pour tester une app iOS avant publication officielle sur l'App Store.</td></tr>
@@ -786,9 +825,11 @@ blockquote {
 <tr><td><strong>TVA intracommunautaire</strong></td><td>Numéro de TVA permettant les échanges B2B en Europe (préfixe FR).</td></tr>
 <tr><td><strong>Magic link</strong></td><td>Lien à usage unique envoyé par email pour se connecter sans mot de passe.</td></tr>
 <tr><td><strong>Brouillon</strong></td><td>État initial d'un document avant validation explicite. AVA respecte ce principe : rien n'est définitif sans accord.</td></tr>
+<tr><td><strong>Stripe Billing</strong></td><td>Service de Stripe pour les abonnements récurrents (vs Stripe Connect qui sert à encaisser au nom d'un tiers).</td></tr>
+<tr><td><strong>Mod-97</strong></td><td>Algorithme de checksum normalisé ISO 13616 utilisé pour valider qu'un IBAN est syntaxiquement correct.</td></tr>
 </tbody></table>
 <hr/>
-<p><em>Document généré le 6 mai 2026 à partir de la base de code AVA-Lou v0.38. Pour toute question : greg@gonnected.com.</em></p>
+<p><em>Document généré le 6 mai 2026 à partir de la base de code AVA-Lou v0.39. Pour toute question : greg@gonnected.com.</em></p>
 
 </body>
 </html>

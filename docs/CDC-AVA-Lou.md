@@ -3,7 +3,7 @@
 **L'OS administratif des indépendants**
 *Voice-first invoicing pour artisans des DROM*
 
-Version du 6 mai 2026 — Greg Hanffou
+Version v0.39 du 6 mai 2026 — Greg Hanffou
 
 ---
 
@@ -18,9 +18,10 @@ Version du 6 mai 2026 — Greg Hanffou
 7. [Sécurité & conformité](#7-sécurité--conformité)
 8. [Identité visuelle](#8-identité-visuelle)
 9. [Distribution](#9-distribution)
-10. [Coûts d'exploitation](#10-coûts-dexploitation)
-11. [Limites actuelles & roadmap](#11-limites-actuelles--roadmap)
-12. [Glossaire](#12-glossaire)
+10. [Modèle économique](#10-modèle-économique)
+11. [Coûts d'exploitation](#11-coûts-dexploitation)
+12. [Limites actuelles & roadmap](#12-limites-actuelles--roadmap)
+13. [Glossaire](#13-glossaire)
 
 ---
 
@@ -38,7 +39,7 @@ AVA comprend la commande, prépare un brouillon de facture conforme à la loi fr
 
 **Cible métier prioritaire** : artisans du bâtiment, plomberie, électricité, menuiserie, peinture, et services à la personne, basés à La Réunion (974), Mayotte (976), Guadeloupe (971), Martinique (972), Guyane (973). TVA par défaut adaptée 8,5 %.
 
-**État** : application déployée en production (https://ava-lou.vercel.app) et publiée sur **Apple TestFlight** (build 1.0). 38 versions itératives livrées en mai 2026.
+**État** : application déployée en production (https://ava-lou.vercel.app) et publiée sur **Apple TestFlight** (build 1.0(2)). 39 versions itératives livrées en mai 2026.
 
 ---
 
@@ -238,7 +239,7 @@ Page **/bilan** :
 
 - CRUD complet
 - 8 catégories : matériel, déplacement, sous-traitance, restauration, téléphonie, outillage, formation, autre
-- **Photo OCR** (GPT-4o Vision) pour saisie ultra-rapide
+- **Photo OCR** (GPT-4o Vision) pour saisie ultra-rapide — ticket Point P / Leroy Merlin / restaurant / péage photographié → champs pré-remplis en 3 secondes
 - TVA déductible estimée
 
 ### F. Rendez-vous
@@ -271,6 +272,14 @@ Page **/bilan** :
 
 - L'artisan colle son lien Stripe Payment Link / SumUp / PayPal.me / Lydia dans Paramètres une fois pour toutes
 - Inclus automatiquement dans les emails `send_payment_link`
+
+### J-bis. Scanner mon RIB (V39)
+
+- Bouton **« 📷 Scanner mon RIB »** dans le wizard d'onboarding et dans Paramètres
+- L'artisan photographie son RIB papier ou une capture d'écran de son app banque
+- GPT-4o Vision extrait IBAN, BIC, nom de banque, titulaire en 3 secondes
+- Validation côté serveur : checksum mod-97 ISO 13616, longueur attendue par pays (FR=27, BE=16, DE=22, ES=24, IT=27, LU=20, MC=27, etc. — 17 pays SEPA)
+- Si checksum suspect → message d'avertissement, autres champs pré-remplis quand même
 
 ### K. Comptabilité & bilan
 
@@ -509,7 +518,7 @@ L'export CSV préfixe d'un apostrophe toute valeur commençant par `=`, `+`, `-`
 
 - **Bundle ID** : `fr.digidatale.ava`
 - **App Store Connect ID** : `6766485791`
-- **Build courant** : 1.0 (1), expire le 2026-08-03
+- **Build courant** : 1.0 (2), uploadé le 6 mai 2026 à 05:56 UTC
 - **Min OS** : iOS 15.0
 - Signing : Apple Distribution (cert valide jusqu'en mai 2027)
 - Provisioning profile : « AVA App Store 2026-05-05 » (valide 1 an)
@@ -522,7 +531,50 @@ L'export CSV préfixe d'un apostrophe toute valeur commençant par `=`, `+`, `-`
 
 ---
 
-# 10. Coûts d'exploitation
+# 10. Modèle économique
+
+## 10.1 Cible : SaaS B2B abonnement mensuel
+
+AVA est conçue comme un service par abonnement payé par l'artisan. Le modèle évite la dépendance publicitaire et aligne les intérêts : si AVA fait gagner du temps à l'artisan, il continue à payer.
+
+## 10.2 Hypothèses de prix
+
+Trois paliers pressentis (à valider en interview avec Lou et 5-10 artisans) :
+
+| Plan | Prix mensuel | Inclus |
+|---|---|---|
+| **Découverte** | 9 € | 50 dictées vocales/mois, 30 photos OCR, 100 factures, 1 utilisateur |
+| **Pro** (cible principale) | 19 € | dictées vocales illimitées, OCR illimité, factures illimitées, page Relances, bilan PDF, export comptable |
+| **Équipe** (V2) | 39 € + 9 € / utilisateur additionnel | Pro + secrétaire ou comptable invité en lecture |
+
+## 10.3 Période d'essai
+
+14 jours d'essai sans carte bleue. Au jour 14, prompt « pour continuer à utiliser AVA, ajoutez votre moyen de paiement ».
+
+## 10.4 Bêta-utilisateurs
+
+Lou (cible originale) et les premiers artisans qui testent AVA bénéficient de **6 mois gratuits** puis tarif lancement (par exemple 12 € au lieu de 19 €) pendant la première année. Geste commercial pour récompenser la confiance de la première heure.
+
+## 10.5 Stripe Billing
+
+L'encaissement passe par **Stripe Billing** (compte AVA `acct_1TTtt5D9fM8BIyAT`). Implémentation :
+
+- Page `/abonnement` avec Stripe Checkout intégré
+- Webhook `/api/stripe/webhook` qui synchronise `profiles.subscription_status` à chaque événement (`subscription.created`, `updated`, `deleted`, `payment_failed`)
+- Middleware paywall qui redirige vers `/abonnement` si `subscription_status !== 'active'` au-delà de la période d'essai
+
+⚠️ **Pas encore implémenté** (V40+). Le compte Stripe AVA-Lou est aujourd'hui en `Review in progress` chez Stripe (validation 2-3 jours).
+
+## 10.6 Cohérence avec le compte Stripe **de l'artisan**
+
+Important : il y a **deux flux Stripe complètement séparés**.
+
+| Flux Stripe | Pour qui | Statut |
+|---|---|---|
+| **AVA encaisse l'abonnement de l'artisan** | Le compte AVA-Lou (notre compte) | À implémenter V40+ |
+| **L'artisan encaisse ses propres clients via Payment Link** | Le compte Stripe de chaque artisan | ✅ Déjà fait (V35) — l'artisan colle juste un lien |
+
+# 11. Coûts d'exploitation
 
 Estimations pour **100 utilisateurs actifs**, 50 dictées vocales/mois chacun :
 
@@ -540,23 +592,24 @@ Soit **~0,85 $ par utilisateur actif/mois** — sustainable à un prix d'abonnem
 
 ---
 
-# 11. Limites actuelles & roadmap
+# 12. Limites actuelles & roadmap
 
-## 11.1 Ce qui est livré (V0 → V38)
+## 12.1 Ce qui est livré (V0 → V39)
 
-- 38 versions itératives, 31 PRs mergées
+- 39 versions itératives, 33 PRs mergées
 - Voix bidirectionnelle complète
 - 15 intents vocaux reconnus
-- Photo OCR notes de frais
+- **Photo OCR notes de frais** (tickets de caisse)
+- **Photo OCR RIB** (IBAN/BIC/banque scan en 3 sec)
 - PDF factures + devis + bilan
 - CSV multi-périodes
 - TVA mensuelle CA3-ready
 - Page Relances avec mailto pré-rempli
-- Wizard onboarding 3 étapes
+- Wizard onboarding 3 étapes (avec scanner RIB)
 - Lien de paiement Stripe/SumUp/PayPal
-- TestFlight build VALID
+- TestFlight build 1.0(2) uploadé
 
-## 11.2 Limites connues
+## 12.2 Limites connues
 
 - Pas d'envoi d'email automatisé serveur (aujourd'hui : mailto qui ouvre l'app email native du téléphone)
 - Pas d'intégration Stripe Connect serveur (aujourd'hui : lien collé manuellement)
@@ -567,20 +620,21 @@ Soit **~0,85 $ par utilisateur actif/mois** — sustainable à un prix d'abonnem
 - Pas d'intégration calendrier iOS/Google
 - Pas de signature électronique des devis (le « Bon pour accord » est sur PDF, à signer à la main)
 
-## 11.3 Roadmap V2 (priorité décroissante)
+## 12.3 Roadmap V2 (priorité décroissante)
 
-1. **Stripe Connect natif** : génération de Payment Link à chaque facture + webhook pour `mark_paid` automatique
-2. **Email transactionnel via Resend** : envoi depuis ava@digidatale.com sans dépendre de l'app email
-3. **Notifications Push** (iOS + Android) : facture payée, échéance approchante, RDV imminent
-4. **Multi-utilisateur** : comptable invité en lecture, secrétaire en write limité
-5. **OCR devis manuscrit** : scanner un brouillon papier → AVA crée un devis numérique
-6. **Voice editing** : « modifie la dernière facture, change le montant à 200 € »
-7. **Intégration calendrier** (Apple Calendar, Google Calendar) pour les RDV
-8. **Signature électronique** des devis (DocuSign-like, mais simple)
-9. **Insights V2** : prédictions de trésorerie sur 60 jours
-10. **Internationalisation** : Belgique, Suisse, Québec
+1. **Stripe Billing pour la monétisation AVA** : abonnement mensuel artisan → AVA (cf §10)
+2. **Stripe Connect natif côté artisan** : génération de Payment Link à chaque facture + webhook pour `mark_paid` automatique
+3. **Email transactionnel via Resend** : envoi depuis ava@digidatale.com sans dépendre de l'app email
+4. **Notifications Push** (iOS + Android) : facture payée, échéance approchante, RDV imminent
+5. **Multi-utilisateur** : comptable invité en lecture, secrétaire en write limité
+6. **OCR devis manuscrit** : scanner un brouillon papier → AVA crée un devis numérique
+7. **Voice editing** : « modifie la dernière facture, change le montant à 200 € »
+8. **Intégration calendrier** (Apple Calendar, Google Calendar) pour les RDV
+9. **Signature électronique** des devis (DocuSign-like, mais simple)
+10. **Insights V2** : prédictions de trésorerie sur 60 jours
+11. **Internationalisation** : Belgique, Suisse, Québec
 
-## 11.4 Hors-scope long terme
+## 12.4 Hors-scope long terme
 
 - ERP complet (logistique, RH, achats centralisés)
 - Marketplace de prestations
@@ -589,7 +643,7 @@ Soit **~0,85 $ par utilisateur actif/mois** — sustainable à un prix d'abonnem
 
 ---
 
-# 12. Glossaire
+# 13. Glossaire
 
 | Terme | Définition |
 |---|---|
@@ -610,7 +664,9 @@ Soit **~0,85 $ par utilisateur actif/mois** — sustainable à un prix d'abonnem
 | **TVA intracommunautaire** | Numéro de TVA permettant les échanges B2B en Europe (préfixe FR). |
 | **Magic link** | Lien à usage unique envoyé par email pour se connecter sans mot de passe. |
 | **Brouillon** | État initial d'un document avant validation explicite. AVA respecte ce principe : rien n'est définitif sans accord. |
+| **Stripe Billing** | Service de Stripe pour les abonnements récurrents (vs Stripe Connect qui sert à encaisser au nom d'un tiers). |
+| **Mod-97** | Algorithme de checksum normalisé ISO 13616 utilisé pour valider qu'un IBAN est syntaxiquement correct. |
 
 ---
 
-*Document généré le 6 mai 2026 à partir de la base de code AVA-Lou v0.38. Pour toute question : greg@gonnected.com.*
+*Document généré le 6 mai 2026 à partir de la base de code AVA-Lou v0.39. Pour toute question : greg@gonnected.com.*
