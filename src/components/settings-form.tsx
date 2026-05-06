@@ -402,12 +402,38 @@ export function SettingsForm({ initialProfile }: { initialProfile: ProfileForm }
       </AvaCard>
 
       <AvaCard padding={16}>
+        <AvaLabel>Un retour à partager ?</AvaLabel>
+        <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.muted, marginTop: 6, marginBottom: 12 }}>
+          Bug, idée d&apos;amélioration, ou simple compliment — tout est précieux pendant la bêta.
+        </div>
+        <a
+          href={`mailto:greg@gonnected.com?subject=${encodeURIComponent('Retour AVA')}&body=${encodeURIComponent('Bonjour Greg,\n\n[Décrivez votre retour ici]\n\n—\nEnvoyé depuis AVA')}`}
+          style={{ textDecoration: 'none' }}
+        >
+          <AvaButton kind="light">Envoyer un email à Greg</AvaButton>
+        </a>
+      </AvaCard>
+
+      <AvaCard padding={16}>
         <AvaLabel>Déconnexion</AvaLabel>
         <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.muted, marginTop: 6, marginBottom: 12 }}>
           Vous serez déconnecté de cet appareil.
         </div>
         <AvaButton kind="danger" onClick={handleSignOut}>Se déconnecter</AvaButton>
       </AvaCard>
+
+      <div style={{
+        marginTop: 8,
+        textAlign: 'center',
+        font: `400 11px/1.5 ${SANS}`,
+        color: C.muted,
+      }}>
+        AVA · version {process.env.NEXT_PUBLIC_APP_VERSION ?? 'v0.46-bêta'}
+        {' · '}
+        <a href="/legal/cgu" style={{ color: C.muted, textDecoration: 'underline' }}>CGU</a>
+        {' · '}
+        <a href="/legal/privacy" style={{ color: C.muted, textDecoration: 'underline' }}>Confidentialité</a>
+      </div>
     </>
   );
 }
