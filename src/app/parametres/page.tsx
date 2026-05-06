@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { AvaTopBar, AvaCard, AvaLabel, C, SANS, SERIF } from '@/components/ava';
 import { SettingsForm } from '@/components/settings-form';
+import { AnonymousEmailLinkForm } from '@/components/anonymous-email-link-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,10 +26,14 @@ export default async function SettingsPage() {
           Votre <em style={{ fontStyle: 'italic' }}>profil</em>
         </h1>
 
-        <AvaCard padding={16}>
-          <AvaLabel>Compte</AvaLabel>
-          <div style={{ font: `400 15px/1.45 ${SANS}`, color: C.ink, marginTop: 6 }}>{user.email}</div>
-        </AvaCard>
+        {user.is_anonymous ? (
+          <AnonymousEmailLinkForm />
+        ) : (
+          <AvaCard padding={16}>
+            <AvaLabel>Compte</AvaLabel>
+            <div style={{ font: `400 15px/1.45 ${SANS}`, color: C.ink, marginTop: 6 }}>{user.email}</div>
+          </AvaCard>
+        )}
 
         <SettingsForm
           initialProfile={{

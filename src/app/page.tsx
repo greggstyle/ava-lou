@@ -52,6 +52,9 @@ export default async function HomePage() {
     && !profile?.onboarding_completed_at
     && !profile?.onboarding_dismissed_at;
 
+  // V49: anonymous beta users see a banner inviting them to add an email
+  const isAnonymous = user.is_anonymous === true;
+
   const { data: recentInvoices } = await supabase
     .from('invoices')
     .select('id, number, amount_ttc, status, created_at, client_id, clients(name)')
@@ -186,6 +189,27 @@ export default async function HomePage() {
               </div>
               <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.ink2, marginTop: 4 }}>
                 Sans SIRET et raison sociale, vos factures ne sont pas conformes (mentions L441-9). Cela prend deux minutes.
+              </div>
+              <div style={{ font: `500 12px/1 ${SANS}`, color: C.ink, marginTop: 8, textDecoration: 'underline' }}>
+                Aller aux paramètres →
+              </div>
+            </AvaCard>
+          </Link>
+        )}
+
+        {isAnonymous && (
+          <Link href="/parametres" style={{ textDecoration: 'none' }}>
+            <AvaCard padding={14} style={{
+              marginTop: 14,
+              background: C.warmYellow,
+              border: `1px solid ${C.line}`,
+              cursor: 'pointer',
+            }}>
+              <div style={{ font: `600 14px/1.3 ${SANS}`, color: C.ink }}>
+                Mode bêta — sans email
+              </div>
+              <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.ink2, marginTop: 4 }}>
+                Vos données sont sur cet appareil uniquement. Ajoutez votre email pour les retrouver sur votre ordinateur ou un autre téléphone.
               </div>
               <div style={{ font: `500 12px/1 ${SANS}`, color: C.ink, marginTop: 8, textDecoration: 'underline' }}>
                 Aller aux paramètres →
