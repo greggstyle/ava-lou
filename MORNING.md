@@ -40,6 +40,14 @@ Vous m'avez dit avoir ajouté votre compte ✅. L'email TestFlight devrait arriv
 | V36 | **Voice intents `list_relances` + `get_weekly_summary`** (AVA résume la semaine à voix haute) | #29 |
 | V37 | TTS sur SmartGreeting accueil (bouton ▶ pour écouter le brief) | #30 |
 | V38 | Toggle "AVA parle automatiquement" dans `/parametres` (localStorage) | #31 |
+| V39 | **Scanner mon RIB** — photo OCR pour IBAN/BIC/banque (V39) | #33 |
+| V40 | Wizard centré + bouton **Refaire l'onboarding** | #36 |
+| V41 | **Mode démo** — seed/wipe données factices (sub-agent en worktree isolé) | #39 |
+| V42 | Empty states parlants avec exemples de dictée | #37 |
+| V43 | **Export ICS** — Ajouter un RDV à l'agenda iPhone/Google | #38 |
+| V44 | **QR code** sur les pages publiques facture & devis | #40 |
+| V45 | **Page `/aide`** listant 12 commandes vocales avec exemples | #41 |
+| V46 | Bouton feedback + version + liens légaux dans `/parametres` | #42 |
 
 Tout mergé sur `main`, déployé automatiquement sur Vercel. **0 build cassé.**
 
