@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import { AvaButton, AvaCard, AvaField, AvaLabel, C, SANS, SERIF } from '@/components/ava';
 import type { LegalForm } from '@/lib/types';
 import { TtsPrefToggle } from '@/components/tts-pref-toggle';
+import { IbanScanButton } from '@/components/iban-scan-button';
 
 export interface ProfileForm {
   full_name: string;
@@ -302,6 +303,17 @@ export function SettingsForm({ initialProfile }: { initialProfile: ProfileForm }
           Affichées sur les factures pour permettre à vos clients de payer par virement.
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <IbanScanButton
+            tone="soft"
+            onResult={(r) => {
+              setProfile({
+                ...profile,
+                iban: r.iban ?? profile.iban,
+                bic: r.bic ?? profile.bic,
+                bank_name: r.bank_name ?? profile.bank_name,
+              });
+            }}
+          />
           <AvaField label="IBAN" hint="ex FR76 1234 5678 9012 3456 7890 123">
             <input type="text" style={inputStyle}
               value={profile.iban}
