@@ -8,6 +8,7 @@ import type { LegalForm } from '@/lib/types';
 import { TtsPrefToggle } from '@/components/tts-pref-toggle';
 import { IbanScanButton } from '@/components/iban-scan-button';
 import { ResetOnboardingButton } from '@/components/reset-onboarding-button';
+import { DemoModeButtons } from '@/components/demo-mode-buttons';
 
 export interface ProfileForm {
   full_name: string;
@@ -384,6 +385,15 @@ export function SettingsForm({ initialProfile }: { initialProfile: ProfileForm }
           Pour montrer l&apos;app à un bêta-testeur ou refaire le tour d&apos;intro.
         </div>
         <ResetOnboardingButton />
+      </AvaCard>
+
+      <AvaCard padding={16}>
+        <AvaLabel>Mode démo & test</AvaLabel>
+        <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.muted, marginTop: 6, marginBottom: 12 }}>
+          Charger des données fictives pour explorer l&apos;app sans saisir
+          30 minutes de contenu, ou tout effacer pour repartir de zéro.
+        </div>
+        <DemoModeButtons />
       </AvaCard>
 
       <AvaCard padding={16}>
