@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { AvaButton, AvaCard, AvaField, AvaLabel, C, SANS, SERIF } from '@/components/ava';
+import { IbanScanButton } from '@/components/iban-scan-button';
 
 interface OnboardingWizardProps {
   initialFullName: string;
@@ -203,6 +204,17 @@ export function OnboardingWizard(props: OnboardingWizardProps) {
 
         {step === 3 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <IbanScanButton
+              tone="primary"
+              onResult={(r) => {
+                if (r.iban) setIban(r.iban);
+                if (r.bic) setBic(r.bic);
+                if (r.bank_name) setBankName(r.bank_name);
+              }}
+            />
+            <div style={{ font: `500 11px/1 ${SANS}`, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.2, marginTop: 4 }}>
+              Ou saisissez à la main
+            </div>
             <AvaField label="IBAN" hint="ex FR76 1234 5678 9012 3456 7890 123">
               <input
                 style={inputStyle}
@@ -211,7 +223,6 @@ export function OnboardingWizard(props: OnboardingWizardProps) {
                 spellCheck={false}
                 onChange={(e) => setIban(e.target.value)}
                 placeholder="FR76 …"
-                autoFocus
               />
             </AvaField>
             <AvaField label="BIC / SWIFT" hint="Pas obligatoire pour un IBAN français">
