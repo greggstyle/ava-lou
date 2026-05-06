@@ -8,6 +8,7 @@ import { PrintButton } from '@/components/print-button';
 import { ShareButton } from '@/components/share-button';
 import { headers } from 'next/headers';
 import { buildPublicUrl, verifyPublicId, publicUrlRequiresToken, signPublicId } from '@/lib/public-url';
+import { QrCodeSvg } from '@/components/qr-code-svg';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,8 +111,18 @@ export default async function VoirFacturePage({ params, searchParams }: PageProp
         kind="facture"
       />
 
+      <div style={{
+        marginTop: 28, paddingTop: 18, borderTop: `1px solid ${C.line}`,
+        display: 'flex', gap: 14, alignItems: 'center',
+      }} className="ava-print-show">
+        <QrCodeSvg data={publicUrl} size={92} />
+        <div style={{ font: `400 11px/1.5 ${SANS}`, color: C.muted, flex: 1 }}>
+          Scannez pour ouvrir la version mobile, payer en ligne ou télécharger le PDF.
+        </div>
+      </div>
+
       <footer style={{
-        marginTop: 32, paddingTop: 16, borderTop: `1px solid ${C.line}`,
+        marginTop: 24, paddingTop: 16, borderTop: `1px solid ${C.line}`,
         font: `400 11px/1.5 ${SANS}`, color: C.muted, textAlign: 'center',
       }}>
         Document généré via AVA · ava-lou.vercel.app
