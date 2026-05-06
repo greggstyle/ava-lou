@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AvaTopBar, AvaCard, AvaListRow, AvaButton, AvaPill, C, SANS } from '@/components/ava';
+import { AvaTopBar, AvaCard, AvaListRow, AvaButton, AvaPill, C, SANS, SERIF } from '@/components/ava';
 import { formatPriceFR, formatDateRelativeFR } from '@/lib/format';
 import { ListSearch } from '@/components/list-search';
 
@@ -114,13 +114,17 @@ export function FacturesListClient({ initialInvoices }: { initialInvoices: Invoi
             </AvaCard>
           )
         ) : (
-          <div style={{ marginTop: 24 }}>
+          <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <AvaCard padding={20}>
-              <div style={{ font: `400 14px/1.5 ${SANS}`, color: C.muted }}>
-                Aucune facture pour l&apos;instant. Créez votre première facture en quelques secondes.
+              <div style={{ font: `500 18px/1.3 ${SERIF}`, color: C.ink, marginBottom: 8 }}>
+                Aucune facture pour l&apos;instant.
               </div>
-              <div style={{ marginTop: 14 }}>
-                <Link href="/factures/nouvelle"><AvaButton kind="light">Nouvelle facture</AvaButton></Link>
+              <div style={{ font: `400 14px/1.55 ${SANS}`, color: C.ink2, marginBottom: 14 }}>
+                Tap le micro et dites simplement <em style={{ fontFamily: SERIF, fontStyle: 'italic' }}>« Facture pour Monsieur Payet, 3 heures à 55 € »</em> — AVA prépare le brouillon pour vous.
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Link href="/listen"><AvaButton kind="primary">Dicter à AVA</AvaButton></Link>
+                <Link href="/factures/nouvelle"><AvaButton kind="light">Saisir manuellement</AvaButton></Link>
               </div>
             </AvaCard>
           </div>

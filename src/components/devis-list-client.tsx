@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AvaTopBar, AvaCard, AvaListRow, AvaButton, C, SANS } from '@/components/ava';
+import { AvaTopBar, AvaCard, AvaListRow, AvaButton, C, SANS, SERIF } from '@/components/ava';
 import { formatPriceFR, formatDateRelativeFR } from '@/lib/format';
 import { ListSearch } from '@/components/list-search';
 
@@ -117,11 +117,15 @@ export function DevisListClient({ initialQuotes }: { initialQuotes: QuoteRow[] }
         ) : (
           <div style={{ marginTop: 24 }}>
             <AvaCard padding={20}>
-              <div style={{ font: `400 14px/1.5 ${SANS}`, color: C.muted }}>
-                Aucun devis pour l&apos;instant. Créez votre premier devis pour proposer une offre à un client.
+              <div style={{ font: `500 18px/1.3 ${SERIF}`, color: C.ink, marginBottom: 8 }}>
+                Aucun devis pour l&apos;instant.
               </div>
-              <div style={{ marginTop: 14 }}>
-                <Link href="/devis/nouveau"><AvaButton kind="light">Nouveau devis</AvaButton></Link>
+              <div style={{ font: `400 14px/1.55 ${SANS}`, color: C.ink2, marginBottom: 14 }}>
+                Tap le micro et dites par exemple <em style={{ fontFamily: SERIF, fontStyle: 'italic' }}>« Devis Mme Hoarau pose carrelage 25 m² à 45 € plus déplacement 80 € »</em> — AVA prépare le brouillon avec mentions légales.
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Link href="/listen"><AvaButton kind="primary">Dicter à AVA</AvaButton></Link>
+                <Link href="/devis/nouveau"><AvaButton kind="light">Saisir manuellement</AvaButton></Link>
               </div>
             </AvaCard>
           </div>

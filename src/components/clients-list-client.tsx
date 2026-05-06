@@ -3,7 +3,7 @@
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AvaTopBar, AvaCard, AvaListRow, AvaButton, C, SANS } from '@/components/ava';
+import { AvaTopBar, AvaCard, AvaListRow, AvaButton, C, SANS, SERIF } from '@/components/ava';
 import { ListSearch } from '@/components/list-search';
 
 interface ClientRow {
@@ -68,11 +68,15 @@ export function ClientsListClient({ initialClients }: { initialClients: ClientRo
         ) : (
           <div style={{ marginTop: 24 }}>
             <AvaCard padding={20}>
-              <div style={{ font: `400 14px/1.5 ${SANS}`, color: C.muted }}>
-                Aucun client pour l&apos;instant. Ajoutez votre premier client pour commencer à émettre des factures et des devis.
+              <div style={{ font: `500 18px/1.3 ${SERIF}`, color: C.ink, marginBottom: 8 }}>
+                Aucun client pour l&apos;instant.
               </div>
-              <div style={{ marginTop: 14 }}>
-                <Link href="/clients/nouveau"><AvaButton kind="light">Nouveau client</AvaButton></Link>
+              <div style={{ font: `400 14px/1.55 ${SANS}`, color: C.ink2, marginBottom: 14 }}>
+                Pas besoin de tout saisir avant de commencer. Quand vous dictez votre première facture, AVA crée le client automatiquement.
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <Link href="/listen"><AvaButton kind="primary">Dicter à AVA</AvaButton></Link>
+                <Link href="/clients/nouveau"><AvaButton kind="light">Ajouter un client</AvaButton></Link>
               </div>
             </AvaCard>
           </div>
