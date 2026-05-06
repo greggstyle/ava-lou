@@ -113,8 +113,11 @@ export function OnboardingWizard(props: OnboardingWizardProps) {
     <div style={{
       position: 'fixed', inset: 0, zIndex: 1000,
       background: 'rgba(11, 29, 51, 0.65)',
-      display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-      padding: '40px 12px 12px',
+      // Centré verticalement (desktop + mobile) plutôt que collé en bas —
+      // donne une impression de modale soignée sur grand écran et reste
+      // confortable au pouce sur iPhone (le scroll interne s'en charge).
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '24px 12px',
     }}>
       <div style={{
         background: C.bone,
@@ -127,6 +130,7 @@ export function OnboardingWizard(props: OnboardingWizardProps) {
         display: 'flex',
         flexDirection: 'column',
         gap: 16,
+        boxShadow: '0 20px 60px rgba(11, 29, 51, 0.18)',
       }}>
         {/* Header */}
         <div>
