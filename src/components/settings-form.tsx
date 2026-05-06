@@ -7,6 +7,7 @@ import { AvaButton, AvaCard, AvaField, AvaLabel, C, SANS, SERIF } from '@/compon
 import type { LegalForm } from '@/lib/types';
 import { TtsPrefToggle } from '@/components/tts-pref-toggle';
 import { IbanScanButton } from '@/components/iban-scan-button';
+import { ResetOnboardingButton } from '@/components/reset-onboarding-button';
 
 export interface ProfileForm {
   full_name: string;
@@ -376,6 +377,14 @@ export function SettingsForm({ initialProfile }: { initialProfile: ProfileForm }
           {saving ? 'Enregistrement…' : saved ? 'Enregistré' : 'Enregistrer'}
         </AvaButton>
       </div>
+
+      <AvaCard padding={16}>
+        <AvaLabel>Démo & test</AvaLabel>
+        <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.muted, marginTop: 6, marginBottom: 12 }}>
+          Pour montrer l&apos;app à un bêta-testeur ou refaire le tour d&apos;intro.
+        </div>
+        <ResetOnboardingButton />
+      </AvaCard>
 
       <AvaCard padding={16}>
         <AvaLabel>Déconnexion</AvaLabel>
