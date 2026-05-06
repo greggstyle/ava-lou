@@ -380,20 +380,25 @@ export function SettingsForm({ initialProfile }: { initialProfile: ProfileForm }
       </div>
 
       <AvaCard padding={16}>
-        <AvaLabel>Démo & test</AvaLabel>
+        <AvaLabel>Aide & commandes vocales</AvaLabel>
         <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.muted, marginTop: 6, marginBottom: 12 }}>
-          Pour montrer l&apos;app à un bêta-testeur ou refaire le tour d&apos;intro.
+          Toutes les commandes que vous pouvez dire à AVA, avec exemples.
         </div>
-        <ResetOnboardingButton />
+        <a href="/aide" style={{ textDecoration: 'none' }}>
+          <AvaButton kind="light">Voir le guide</AvaButton>
+        </a>
       </AvaCard>
 
       <AvaCard padding={16}>
-        <AvaLabel>Mode démo & test</AvaLabel>
+        <AvaLabel>Démo & test</AvaLabel>
         <div style={{ font: `400 13px/1.45 ${SANS}`, color: C.muted, marginTop: 6, marginBottom: 12 }}>
-          Charger des données fictives pour explorer l&apos;app sans saisir
-          30 minutes de contenu, ou tout effacer pour repartir de zéro.
+          Refaire le tour d&apos;intro, charger des données fictives pour explorer
+          l&apos;app, ou tout effacer pour repartir de zéro.
         </div>
-        <DemoModeButtons />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <ResetOnboardingButton />
+          <DemoModeButtons />
+        </div>
       </AvaCard>
 
       <AvaCard padding={16}>
