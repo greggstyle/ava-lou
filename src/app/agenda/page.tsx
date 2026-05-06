@@ -132,6 +132,23 @@ export default async function AgendaPage() {
                               {a.status}
                             </AvaPill>
                           </div>
+                          {!isPast && a.status !== 'annulé' && (
+                            <div style={{ marginTop: 10 }}>
+                              <a
+                                href={`/api/agenda/${a.id}/ics`}
+                                download
+                                style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                                  padding: '6px 10px', borderRadius: 8,
+                                  background: C.soft, border: `1px solid ${C.line}`,
+                                  font: `500 12px/1 ${SANS}`, color: C.ink2,
+                                  textDecoration: 'none',
+                                }}
+                              >
+                                Ajouter à mon agenda
+                              </a>
+                            </div>
+                          )}
                         </AvaCard>
                       );
                     })}
