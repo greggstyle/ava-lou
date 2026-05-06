@@ -61,3 +61,6 @@ android/app/release/
 android/app/debug/
 android/.cxx/
 android/captures/
+
+# Sub-agent worktrees
+.claude/worktrees/
